@@ -185,7 +185,6 @@ class JiraProject:
         alert_key,
         tool_name
     ):
-        normalized_tool_name = normalize_tool_name(tool_name)
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{prefix} {short_desc} in {repo}".format(
@@ -202,7 +201,7 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
-            fields={'customfield_13397': {'value': normalized_tool_name}}
+            fields={'customfield_13397': {'value': tool_name}}
         )
 
         jira_issue = JiraIssue(self, raw)
