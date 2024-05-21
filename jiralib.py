@@ -174,7 +174,6 @@ class JiraProject:
         alert_num,
         repo_key,
         alert_key,
-        tool_name=None
     ):
         tool_mapping = {
             'osv-scanner': 'Github - Code Scanning - OSV-Scanner',
@@ -198,12 +197,11 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
-            fields={'customfield_13397': {'value': identification_source}}  
-
         )
 
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
+        jira_issue.set_custom_field('customfield_13397', {'value': identification_source})
 
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
@@ -319,8 +317,11 @@ class JiraIssue:
             self.rawissue.update(fields={"labels": self.labels})
 
     def set_exposure(self):
-        self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})        
+        self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})   
 
+    def set_custom_field(self, field_id, value):
+        self.rawissue.update(fields={field_id: value})
+        
 def parse_alert_info(desc):
     """
     Parse all the fields in an issue's description and return
