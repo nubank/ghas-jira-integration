@@ -192,6 +192,7 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
+            fields={"customfield_35998": "Internal"}
         )
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
@@ -305,9 +306,6 @@ class JiraIssue:
     def persist_labels(self, labels):
         if labels:
             self.rawissue.update(fields={"labels": self.labels})
-
-    def set_exposure(self):
-        self.rawissue.update(fields={'customfield_35998': 'Internal'})
 
 def parse_alert_info(desc):
     """
