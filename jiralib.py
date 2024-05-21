@@ -10,6 +10,14 @@ UPDATE_EVENT = "jira:issue_updated"
 CREATE_EVENT = "jira:issue_created"
 DELETE_EVENT = "jira:issue_deleted"
 
+TOOL_NAME_MAPPING = {
+    "osv-scanner": "GitHub - Code Scanning - OSV-Scanner",
+    "CodeQL": "GitHub - Code Scanning - CodeQL",
+    "dependency-check": "GitHub - Code Scanning - Dependency-Check"
+}
+
+def normalize_tool_name(tool_name): # Verificar essa funcao 
+    return TOOL_NAME_MAPPING.get(tool_name, "Unknown Tool")
 
 TITLE_PREFIXES = {
     "Alert": "[Code Scanning Alert]:",
@@ -175,7 +183,9 @@ class JiraProject:
         alert_num,
         repo_key,
         alert_key,
+        tool_name
     ):
+        normalized_tool_name = normalize_tool_name(tool_name)
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{prefix} {short_desc} in {repo}".format(
@@ -192,6 +202,7 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
+            fields={'customfield_13397': {'value': normalized_tool_name}}
         )
 
         jira_issue = JiraIssue(self, raw)
