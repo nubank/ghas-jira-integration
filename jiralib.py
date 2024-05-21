@@ -174,7 +174,15 @@ class JiraProject:
         alert_num,
         repo_key,
         alert_key,
+        tool_name
     ):
+        tool_mapping = {
+            'osv-scanner': 'GitHub - Code Scanning - OSV-Scanner',
+            'CodeQL': 'GitHub - Code Scanning - CodeQL',
+            'dependency-check': 'GitHub - Code Scanning - Dependency-Check'
+        }
+        identification_source = tool_mapping.get(tool_name, '')  
+
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{prefix} {short_desc} in {repo}".format(
@@ -195,6 +203,7 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
+        jira_issue.set_custom_field('customfield_13397', identification_source)
 
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
@@ -311,6 +320,9 @@ class JiraIssue:
 
     def set_exposure(self):
         self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})   
+
+    def set_custom_field(self, field_id, value):
+        self.rawissue.update(fields={field_id: {'value': value}})    
         
 def parse_alert_info(desc):
     """

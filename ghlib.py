@@ -317,6 +317,9 @@ class Alert(AlertBase):
         )
         resp.raise_for_status()
 
+    def get_tool_name(self):
+        return self.json.get('tool', {}).get('name', '')
+
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
