@@ -307,7 +307,7 @@ class JiraIssue:
             self.rawissue.update(fields={"labels": self.labels})
 
     def set_exposure(self):
-        self.rawissue.update(fields={'customfield_10678': 'Internal'})
+        self.rawissue.update(fields={'customfield_35998': 'Internal'})
 
 def parse_alert_info(desc):
     """
