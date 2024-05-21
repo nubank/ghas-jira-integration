@@ -322,7 +322,7 @@ class JiraIssue:
         self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})   
 
     def set_custom_field(self, field_id, value):
-        self.rawissue.update(fields={field_id: {'value': value}})    
+        self.rawissue.update(fields={'customfield_13397': {'value': value}})    
         
 def parse_alert_info(desc):
     """
