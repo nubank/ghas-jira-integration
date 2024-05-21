@@ -174,13 +174,13 @@ class JiraProject:
         alert_num,
         repo_key,
         alert_key,
-        tool_name,
+        get_tool_name,
     ):
         tool_mapping = {
             'osv-scanner': 'Github - Code Scanning - OSV-Scanner',
             'CodeQL': 'Github - Code Scanning - CodeQL'
         }
-        identification_source = tool_mapping.get(tool_name, '')
+        identification_source = tool_mapping.get(get_tool_name, '')
         
         raw = self.j.create_issue(
             project=self.projectkey,
