@@ -174,6 +174,7 @@ class JiraProject:
         alert_num,
         repo_key,
         alert_key,
+        tool_name,
     ):
         tool_mapping = {
             'osv-scanner': 'Github - Code Scanning - OSV-Scanner',
