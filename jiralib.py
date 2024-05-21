@@ -203,7 +203,7 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
-        jira_issue.set_custom_field('customfield_13397', identification_source)
+        jira_issue.set_custom_field()
 
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
@@ -321,8 +321,8 @@ class JiraIssue:
     def set_exposure(self):
         self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})   
 
-    def set_custom_field(self, field_id, value):
-        self.rawissue.update(fields={'customfield_13397': {'value': value}})    
+    def set_custom_field(self):
+        self.rawissue.update(fields={'customfield_13397': {'value': identification_source}})    
         
 def parse_alert_info(desc):
     """
