@@ -199,6 +199,7 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
+            tool_name=tool_name,
         )
 
         jira_issue = JiraIssue(self, raw)
@@ -321,8 +322,8 @@ class JiraIssue:
     def set_exposure(self):
         self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})   
 
-    def set_custom_field(self):
-        self.rawissue.update(fields={'customfield_13397': {'value': identification_source}})    
+    def set_custom_field(self, field_id, value):
+        self.rawissue.update(fields={field_id: {'value': value}})  
         
 def parse_alert_info(desc):
     """
