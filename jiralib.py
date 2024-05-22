@@ -10,6 +10,12 @@ UPDATE_EVENT = "jira:issue_updated"
 CREATE_EVENT = "jira:issue_created"
 DELETE_EVENT = "jira:issue_deleted"
 
+tool_mapping = {
+    "osv-scanner": "GitHub - Code Scanning - OSV-Scanner",
+    "CodeQL": "GitHub - Code Scanning - CodeQL",
+    "dependency-check": "GitHub - Code Scanning - Dependency-Check"
+}
+
 TITLE_PREFIXES = {
     "Alert": "[Code Scanning Alert]:",
     "Secret": "[Secret Scanning Alert]:",
@@ -176,13 +182,6 @@ class JiraProject:
         alert_key,
         tool_name
     ):
-        tool_mapping = {
-            'osv-scanner': 'GitHub - Code Scanning - OSV-Scanner',
-            'CodeQL': 'GitHub - Code Scanning - CodeQL',
-            'dependency-check': 'GitHub - Code Scanning - Dependency-Check'
-        }
-        identification_source = tool_mapping.get(tool_name, '')  
-
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{prefix} {short_desc} in {repo}".format(
@@ -199,12 +198,11 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
-            tool_name=tool_name
         )
 
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
-        jira_issue.set_custom_field(identification_source)
+        jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
 
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
@@ -322,8 +320,11 @@ class JiraIssue:
     def set_exposure(self):
         self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})   
 
-    def set_custom_field(self, value):
+    def set_identification_source(self, value):
         self.rawissue.update(fields={'customfield_13397': {'value': value}})  
+
+    def set_severity(self, value):
+        self.rawissue.update(fields={'customfield_10678': {'value': value}})     
         
 def parse_alert_info(desc):
     """

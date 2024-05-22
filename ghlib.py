@@ -317,11 +317,17 @@ class Alert(AlertBase):
         )
         resp.raise_for_status()
 
-#    def get_tool_name(self):
-#        return self.json.get("tool", {}).get("name", "")
-    
     def get_tool_name(self):
-        return self.json["tool"]["name"]
+        return self.json.get("tool", {}).get("name", "")
+    
+#    def get_severity(self):
+#        return self.json["rule"]["security_severity_level"] 
+    
+#    def get_tool_name(self):
+#        tool_name = self.json.get("tool", {}).get("name", "")
+#        if not tool_name:
+#            raise ValueError("Tool name not found in JSON data.")
+#        return tool_name
 
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
