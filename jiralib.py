@@ -199,12 +199,12 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
-            tool_name=tool_name,
+            tool_name=tool_name
         )
 
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
-        jira_issue.set_custom_field()
+        jira_issue.set_custom_field(identification_source)
 
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
@@ -322,8 +322,8 @@ class JiraIssue:
     def set_exposure(self):
         self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})   
 
-    def set_custom_field(self, field_id, value):
-        self.rawissue.update(fields={field_id: {'value': value}})  
+    def set_custom_field(self, value):
+        self.rawissue.update(fields={'customfield_13397': {'value': value}})  
         
 def parse_alert_info(desc):
     """
