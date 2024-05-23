@@ -217,7 +217,7 @@ class JiraProject:
         jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
         jira_issue.set_severity(severity_mapping.get(severity, ''))
         
-        jira_issue.set_alert_reference(alert_key)
+        jira_issue.set_alert_reference(alert_url)
         jira_issue.set_repository(repo_id)
 
 
