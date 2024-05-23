@@ -343,11 +343,11 @@ class JiraIssue:
     def set_severity(self, value):
         self.rawissue.update(fields={'customfield_10678': {'value': value}})
 
-    def set_alert_reference(self, value):
-        self.rawissue.update(fields={'customfield_16748': value})     
+    def set_alert_reference(self, alert_url):
+        self.rawissue.update(fields={'customfield_16748': alert_url})     
     
-    def set_repository(self, value):
-        self.rawissue.update(fields={'customfield_16751': {'value': value}})  
+    def set_repository(self, repo_id):
+        self.rawissue.update(fields={'customfield_16751': repo_id})  
         
 def parse_alert_info(desc):
     """
