@@ -187,7 +187,7 @@ class JiraProject:
         alert_num,
         repo_key,
         alert_key,
-        tool_name,
+#        tool_name,
 #        severity
     ):
         raw = self.j.create_issue(
@@ -210,7 +210,7 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
-        jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
+#        jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
 #        jira_issue.set_severity(severity_mapping.get(severity, ''))
 #        jira_issue.set_alert_reference(alert_url)
 
