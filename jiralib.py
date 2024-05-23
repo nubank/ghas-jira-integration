@@ -210,8 +210,7 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
-        secret_scanning = 'Secret Scanning'
-        jira_issue.set_identification_source(tool_mapping.get(tool_name, secret_scanning))
+        jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
         jira_issue.set_severity(severity_mapping.get(severity, ''))
 #        jira_issue.set_alert_reference(alert_url)
 
@@ -340,9 +339,6 @@ class JiraIssue:
 
     def set_alert_reference(self, value):
         self.rawissue.update(fields={'customfield_16748': {'value': value}})     
-
-    def set_alert_rule(self, value):
-        self.rawissue.update(fields={'customfield_21734': {'value': value}})  
     
     def set_repository(self, value):
         self.rawissue.update(fields={'customfield_16751': {'value': value}})  

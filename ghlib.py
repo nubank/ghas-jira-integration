@@ -282,10 +282,10 @@ class AlertBase:
         self.do_adjust_state(target_state)
 
     def get_tool_name(self):
-        tool_name = self.json.get("tool", {}).get("name", None)
-#        if tool_name is None:
-#            return
-#        return tool_name
+        tool_name = self.json.get("tool", {}).get("name", '')
+        if not tool_name:
+            return
+        return tool_name
     
     def get_severity(self):
         security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")
