@@ -188,7 +188,7 @@ class JiraProject:
         repo_key,
         alert_key,
         tool_name,
-        severity
+#        severity
     ):
         raw = self.j.create_issue(
             project=self.projectkey,
