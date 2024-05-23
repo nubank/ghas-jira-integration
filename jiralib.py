@@ -212,7 +212,7 @@ class JiraProject:
         jira_issue.set_exposure()
         jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
         jira_issue.set_severity(severity_mapping.get(severity, ''))
-#        jira_issue.set_alert_reference(alert_url)
+        jira_issue.set_alert_reference(alert_url)
 
 
         logger.info(
@@ -223,7 +223,7 @@ class JiraProject:
         logger.info(
             "Created issue {issue_key} for {alert_type} {alert_num} in {repo_id}.".format(
                 issue_key=raw.key,
-                alert_type=alert_type,
+                alert_type=alert_typ e,
                 alert_num=alert_num,
                 repo_id=repo_id,
             )
