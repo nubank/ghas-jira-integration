@@ -210,7 +210,8 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
-        jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
+        default_tool = 'Secret Scanning'
+        jira_issue.set_identification_source(tool_mapping.get(tool_name, default_tool))
         jira_issue.set_severity(severity_mapping.get(severity, ''))
 #        jira_issue.set_alert_reference(alert_url)
 
