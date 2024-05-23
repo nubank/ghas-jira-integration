@@ -212,7 +212,7 @@ class JiraProject:
         jira_issue.set_exposure()
         jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
         jira_issue.set_severity(severity_mapping.get(severity, ''))
-#        jira_issue.set_alert_reference(alert_url)
+        jira_issue.set_alert_reference()
 
 
         logger.info(
@@ -338,7 +338,7 @@ class JiraIssue:
         self.rawissue.update(fields={'customfield_10678': {'value': value}})
 
     def set_alert_reference(self, value):
-        self.rawissue.update(fields={'customfield_16748': {'value': value}})     
+        self.rawissue.update(fields={'customfield_16748': {'value': alert_url}})     
     
     def set_repository(self, value):
         self.rawissue.update(fields={'customfield_16751': {'value': value}})  
