@@ -347,7 +347,7 @@ class JiraIssue:
         self.rawissue.update(fields={'customfield_16748': alert_url})     
     
     def set_repository(self, repo_id):
-        self.rawissue.update(fields={'customfield_16751': repo_id})  
+        self.rawissue.update(fields={'customfield_16751': [repo_id]})  
         
 def parse_alert_info(desc):
     """
