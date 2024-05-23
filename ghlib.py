@@ -286,7 +286,15 @@ class AlertBase:
         if tool_name is None:
             return
         return tool_name
-        
+    
+    def get_severity(self):
+        security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")
+        if not security_severity_level:
+            security_severity_level = self.json.get("severity", "")
+        if security_severity_level is None:
+            return
+        return security_severity_level
+
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
@@ -321,12 +329,6 @@ class Alert(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
-    
-#    def get_severity(self):
-#        security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")
-#        if not security_severity_level:
-#                security_severity_level = self.json.get("severity", "")
-#        return security_severity_level
     
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
