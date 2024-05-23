@@ -294,6 +294,12 @@ class AlertBase:
         if not security_severity_level:
             return
         return security_severity_level
+    
+    def get_full_description(self):
+        full_description = self.json.get("rule", {}).get("full_description", "")
+        if not full_description:
+            return
+        return full_description
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
