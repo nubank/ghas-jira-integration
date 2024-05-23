@@ -344,7 +344,7 @@ class JiraIssue:
         self.rawissue.update(fields={'customfield_10678': {'value': value}})
 
     def set_alert_reference(self, value):
-        self.rawissue.update(fields={'customfield_16748': {'value': value}})     
+        self.rawissue.update(fields={'customfield_16748': value})     
     
     def set_repository(self, value):
         self.rawissue.update(fields={'customfield_16751': {'value': value}})  
