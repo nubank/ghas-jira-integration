@@ -223,7 +223,7 @@ class JiraProject:
         logger.info(
             "Created issue {issue_key} for {alert_type} {alert_num} in {repo_id}.".format(
                 issue_key=raw.key,
-                alert_type=alert_typ e,
+                alert_type=alert_typ,
                 alert_num=alert_num,
                 repo_id=repo_id,
             )
