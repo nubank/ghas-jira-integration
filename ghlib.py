@@ -320,15 +320,12 @@ class Alert(AlertBase):
     def get_tool_name(self):
         return self.json.get("tool", {}).get("name", "")
     
-#    def get_severity(self):
-#        return self.json["rule"]["security_severity_level"] 
+    def get_severity(self):
+        return self.json.get("rule", {}).get("security_severity_level", "")
+#        if not security_severity_level:
+#                security_severity_level = self.json.get("severity", "")
+#        return security_severity_level
     
-#    def get_tool_name(self):
-#        tool_name = self.json.get("tool", {}).get("name", "")
-#        if not tool_name:
-#            raise ValueError("Tool name not found in JSON data.")
-#        return tool_name
-
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)

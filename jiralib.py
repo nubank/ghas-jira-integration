@@ -16,6 +16,13 @@ tool_mapping = {
     "dependency-check": "GitHub - Code Scanning - Dependency-Check"
 }
 
+severity_mapping = {
+    "critical": "Very High",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+}
+
 TITLE_PREFIXES = {
     "Alert": "[Code Scanning Alert]:",
     "Secret": "[Secret Scanning Alert]:",
@@ -180,7 +187,8 @@ class JiraProject:
         alert_num,
         repo_key,
         alert_key,
-        tool_name
+        tool_name,
+        severity
     ):
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -203,6 +211,8 @@ class JiraProject:
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
         jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
+        jira_issue.set_severity(severity_mapping.get(severity, ''))
+
 
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
