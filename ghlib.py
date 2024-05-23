@@ -321,10 +321,10 @@ class Alert(AlertBase):
         return self.json.get("tool", {}).get("name", "")
     
     def get_severity(self):
-        return self.json.get("rule", {}).get("security_severity_level", "")
-#        if not security_severity_level:
-#                security_severity_level = self.json.get("severity", "")
-#        return security_severity_level
+        security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")
+        if not security_severity_level:
+                security_severity_level = self.json.get("severity", "")
+        return security_severity_level
     
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
