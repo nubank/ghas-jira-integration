@@ -282,8 +282,11 @@ class AlertBase:
         self.do_adjust_state(target_state)
 
     def get_tool_name(self):
-        return self.json.get("tool", {}).get("name", "")
-
+        tool_name = self.json.get("tool", {}).get("name", None)
+        if tool_name is None:
+            return
+        return tool_name
+        
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
