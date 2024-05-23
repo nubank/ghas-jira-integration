@@ -64,7 +64,6 @@ class Sync:
                 alert.github_repo.get_key(),
                 alert.get_key(),
                 alert.get_tool_name(),
-                alert.get_severity(),
             )
             newissue.adjust_state(alert.get_state())
             return alert.get_state()
