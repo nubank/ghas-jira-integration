@@ -33,8 +33,6 @@ DESC_TEMPLATE = """
 
 {full_description}
 
-{alert_url}
-
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
 DO NOT MODIFY DESCRIPTION BELOW LINE.
