@@ -334,7 +334,8 @@ class Alert(AlertBase):
         resp.raise_for_status()
 
     def get_full_description(self):
-        full_description = self.json.get("rule", {}).get("full_description", "")
+        full_description = self.json.get("rule", {}).get("full_description", "No description available.")
+        print("Full Description:", full_description) # Debugging
         return full_description
     
 class Secret(AlertBase):
