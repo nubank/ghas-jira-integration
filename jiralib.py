@@ -31,7 +31,7 @@ TITLE_PREFIXES = {
 DESC_TEMPLATE = """
 {long_desc}
 
-{full_description}
+{get_full_description}
 
 {alert_url}
 
@@ -191,7 +191,7 @@ class JiraProject:
         alert_key,
         tool_name,
         severity,
-        full_description,
+        get_full_description,
     ):
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -206,7 +206,7 @@ class JiraProject:
                 alert_num=alert_num,
                 repo_key=repo_key,
                 alert_key=alert_key,
-                full_description=full_description,
+                get_full_description=get_full_description,
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
