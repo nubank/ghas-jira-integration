@@ -33,7 +33,17 @@ DESC_TEMPLATE = """
 
 {full_description}
 
-{alert_url}
+
+
+
+
+
+
+
+
+
+
+
 
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
@@ -201,7 +211,6 @@ class JiraProject:
             description=DESC_TEMPLATE.format(
                 long_desc=long_desc,
                 full_description=full_description,
-                alert_url=alert_url,
                 repo_id=repo_id,
                 alert_type=alert_type,
                 alert_num=alert_num,
