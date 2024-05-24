@@ -296,10 +296,7 @@ class AlertBase:
         return security_severity_level
     
     def get_full_description(self):
-        full_description = self.json.get("rule", {}).get("full_description", "")
-        if not full_description:
-            return
-        return full_description
+        raise NotImplementedError
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
@@ -335,6 +332,9 @@ class Alert(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
+
+    def get_full_description(self):
+        return self.json.get("rule", {}).get("full_description", "")
     
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
@@ -374,3 +374,7 @@ class Secret(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
+
+    def get_full_description(self):
+        full_description = "Secret was found in code"
+        return full_description
