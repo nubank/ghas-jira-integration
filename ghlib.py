@@ -334,7 +334,7 @@ class Alert(AlertBase):
         resp.raise_for_status()
 
     def get_full_description(self):
-        return self.json.get("rule", {}).get("full_description", "")
+        return self.json.get("rule", {}).get("name", "")
     
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
@@ -376,5 +376,5 @@ class Secret(AlertBase):
         resp.raise_for_status()
 
     def get_full_description(self):
-        full_description = "Secret was found in code"
+        full_description = "Secret was found in code."
         return full_description
