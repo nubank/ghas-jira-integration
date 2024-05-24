@@ -297,8 +297,8 @@ class AlertBase:
     
     def get_full_description(self):
         full_description = self.json.get("rule", {}).get("full_description", "")
-        if not full_description:
-            return
+        if full_description is None:
+            full_description = "No description available" 
         return full_description
 
 class Alert(AlertBase):
