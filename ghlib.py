@@ -300,7 +300,7 @@ class AlertBase:
 #        return full_description
 
     def get_full_description(self):
-        full_description = self.json.get("rule", {})
+        full_description = self.json.get("message", {}).get("text", "")
         print(self.json)
         if not full_description:
             full_description = "No description available."
