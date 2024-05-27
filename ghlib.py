@@ -291,7 +291,7 @@ class AlertBase:
         security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")
         if not security_severity_level:
             security_severity_level = self.json.get("severity", "")
-        else security_severity_level:
+        else:
             return
         return security_severity_level
     
