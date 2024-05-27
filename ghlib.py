@@ -333,24 +333,24 @@ class Alert(AlertBase):
         )
         resp.raise_for_status()
 
-#    def get_full_description(self):
-#        full_description = self.json.get("text", "")
-#        if not full_description:
-#            full_description = self.json.get("rule", {}).get("full_description", "")
-#        if not full_description:
-#            full_description = "No description available."
-#        return full_description
-
     def get_full_description(self):
-        print(self.json) 
-        rule = self.json.get("rule", {})
-        full_description = rule.get("full_description", "")
-        
+        full_description = self.json.get("rule", {}).get("full_description", "")
         if not full_description:
-            print("Rule key present:", "rule" in self.json) 
-            print("Full description key present:", "full_description" in rule)  
-            return "No description available."
+            full_description = self.json.get("text", "")
+        if not full_description:
+            full_description = "No description available."
         return full_description
+
+#    def get_full_description(self):
+#        print(self.json) 
+#        rule = self.json.get("rule", {})
+#        full_description = rule.get("full_description", "")
+#        
+#        if not full_description:
+#            print("Rule key present:", "rule" in self.json) 
+#            print("Full description key present:", "full_description" in rule)  
+#            return "No description available."
+#        return full_description
     
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
