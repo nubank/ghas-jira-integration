@@ -296,7 +296,12 @@ class AlertBase:
         return security_severity_level
     
     def get_full_description(self):
-        raise NotImplementedError
+        full_description = self.json.get("rule", {}).get("full_description", "")
+        if not full_description:
+            full_description = self.json.get("text", "")
+        else:
+            full_description = "No description available."
+        return full_description
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
@@ -333,13 +338,7 @@ class Alert(AlertBase):
         )
         resp.raise_for_status()
 
-    def get_full_description(self):
-        full_description = self.json.get("rule", {}).get("full_description", "")
-        if not full_description:
-            full_description = self.json.get("text", "")
-        if not full_description:
-            full_description = "No description available."
-        return full_description
+
 
 #    def get_full_description(self):
 #        print(self.json) 
@@ -390,7 +389,3 @@ class Secret(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
-
-    def get_full_description(self):
-        full_description = "No description available."
-        return full_description
