@@ -225,7 +225,6 @@ class GHRepository:
             headers=self.gh.default_headers(),
             timeout=util.REQUEST_TIMEOUT,
         )
-        print(resp.json())
         try:
             resp.raise_for_status()
             return Alert(self, resp.json())
@@ -235,8 +234,7 @@ class GHRepository:
                 return None
             else:
                 # propagate everything else
-                raise
-
+                raise         
 
 class AlertBase:
     def __init__(self, github_repo, json):
@@ -300,9 +298,9 @@ class AlertBase:
 #            full_description = "No description available."
 #        return full_description
 
-    def get_full_description(self,resp):
+    def get_full_description(self):
 #        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
-        full_description = json.dumps(resp.json, indent=4)
+        full_description = json.dumps(self.json, indent=4)
         if not full_description:
             full_description = "No description available."
         return full_description    
