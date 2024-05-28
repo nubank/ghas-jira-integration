@@ -301,6 +301,7 @@ class AlertBase:
 
     def get_full_description(self):
         full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+        print(resp.json())
         if not full_description:
             full_description = "No description available."
         return full_description    
@@ -338,7 +339,6 @@ class Alert(AlertBase):
             headers=self.gh.default_headers(),
             timeout=util.REQUEST_TIMEOUT,
         )
-        print(resp.json())
         resp.raise_for_status()
 
 #    def get_full_description(self):
