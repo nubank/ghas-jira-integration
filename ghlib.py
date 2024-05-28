@@ -292,10 +292,8 @@ class AlertBase:
             security_severity_level = self.json.get("severity", "")
         return security_severity_level
 
-    def get_full_description(self, resp):
-#        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
-#        full_description = json.dumps(self.json, indent=4)
-        full_description = json.dumps(resp.json, indent=4)   
+    def get_full_description(self):
+        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
         if not full_description:
             full_description = "No description available."
         return full_description    
