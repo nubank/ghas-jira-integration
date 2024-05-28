@@ -299,7 +299,7 @@ class AlertBase:
 #            full_description = "No description available."
 #        return full_description
 
-    def get_full_description(self):
+    def get_full_description(self,resp):
         full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
         print(resp.json())
         if not full_description:
