@@ -338,6 +338,7 @@ class Alert(AlertBase):
             headers=self.gh.default_headers(),
             timeout=util.REQUEST_TIMEOUT,
         )
+        print(resp.json())
         resp.raise_for_status()
 
 #    def get_full_description(self):
