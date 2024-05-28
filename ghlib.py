@@ -225,11 +225,8 @@ class GHRepository:
             headers=self.gh.default_headers(),
             timeout=util.REQUEST_TIMEOUT,
         )
-        print("Made the request")
         try:
             resp.raise_for_status()
-            print("Request successful, status code:", resp.status_code)
-            print("Received response:", json.dumps(resp.json(), indent=4))
             return Alert(self, resp.json())
         except HTTPError as httpe:
             if httpe.response.status_code == 404:
@@ -335,7 +332,10 @@ class Alert(AlertBase):
             headers=self.gh.default_headers(),
             timeout=util.REQUEST_TIMEOUT,
         )
+        print("Made the request")
         resp.raise_for_status()
+        print("Request successful, status code:", resp.status_code)  
+        print("Received response:", json.dumps(resp.json(), indent=4)) 
 
 #    def get_full_description(self):
 #        print(self.json) 
