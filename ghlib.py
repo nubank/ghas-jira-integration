@@ -225,6 +225,7 @@ class GHRepository:
             headers=self.gh.default_headers(),
             timeout=util.REQUEST_TIMEOUT,
         )
+        print(resp.json())
         try:
             resp.raise_for_status()
             return Alert(self, resp.json())
