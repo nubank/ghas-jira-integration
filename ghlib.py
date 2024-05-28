@@ -227,7 +227,6 @@ class GHRepository:
         )
         try:
             resp.raise_for_status()
-            print(resp.json())
             return Alert(self, resp.json())
         except HTTPError as httpe:
             if httpe.response.status_code == 404:
@@ -295,7 +294,7 @@ class AlertBase:
 
     def get_full_description(self):
         full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
-#        full_description = json.dumps(self.json, indent=4)
+        full_description = json.dumps(self.json, indent=4)
         if not full_description:
             full_description = "No description available."
         return full_description    
