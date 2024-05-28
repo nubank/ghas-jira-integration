@@ -301,7 +301,8 @@ class AlertBase:
 #        return full_description
 
     def get_full_description(self,resp):
-        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+#        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+        full_description = json.dumps(resp.json, indent=4)
         if not full_description:
             full_description = "No description available."
         return full_description    
