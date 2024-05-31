@@ -292,11 +292,11 @@ class AlertBase:
             security_severity_level = self.json.get("severity", "")
         return security_severity_level
 
-    def get_full_description(self):
-        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
-        if not full_description:
-            full_description = "No description available."
-        return full_description    
+    # def get_full_description(self):
+    #     full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+    #     if not full_description:
+    #         full_description = "No description available."
+    #     return full_description    
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
@@ -333,17 +333,12 @@ class Alert(AlertBase):
         )
         resp.raise_for_status()
 
-#    def get_full_description(self):
-#        print(self.json) 
-#        rule = self.json.get("rule", {})
-#        full_description = rule.get("full_description", "")
-#        
-#        if not full_description:
-#            print("Rule key present:", "rule" in self.json) 
-#            print("Full description key present:", "full_description" in rule)  
-#            return "No description available."
-#        return full_description
+    def get_full_description(self):
+        return self.json["rule"].get("full_description", "")
     
+    def get_help(self):
+        return self.json["rule"].get("help", "")
+
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
@@ -382,3 +377,13 @@ class Secret(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
+
+# Uncomment to test
+# if __name__ == "__main__":
+#     gh = GitHub("https://api.github.com",
+#                 "token")
+#     ghrepo = GHRepository(gh, "nubank/mini-meta-repo")
+#     alert = ghrepo.get_alert(18)
+#     full_description = alert.get_full_description()
+#     alert_help = alert.get_help()
+#     print()
