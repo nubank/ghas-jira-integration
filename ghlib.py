@@ -226,6 +226,8 @@ class GHRepository:
             timeout=util.REQUEST_TIMEOUT,
         )
         try:
+            formatted_json = json.dumps(resp.json(), indent=4)
+            logger.info("Response JSON:\n%s", formatted_json)
             resp.raise_for_status()
             return Alert(self, resp.json())
         except HTTPError as httpe:
