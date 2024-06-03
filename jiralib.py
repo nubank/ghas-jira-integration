@@ -17,10 +17,11 @@ tool_mapping = {
 }
 
 severity_mapping = {
-    "critical": "Very High",
+    "critical": "Critical",
     "high": "High",
     "medium": "Medium",
     "low": "Low",
+    "warning": "Informative"
 }
 
 TITLE_PREFIXES = {
@@ -140,7 +141,7 @@ class JiraProject:
                 project=self.projectkey,
                 summary=STATE_ISSUE_SUMMARY,
                 description=STATE_ISSUE_TEMPLATE,
-                issuetype={"name": "Vulnerability"},
+                issuetype={"name": "Vulnerability - General"},
                 labels=self.labels,
             )
         elif len(issues) > 1:
@@ -206,7 +207,7 @@ class JiraProject:
                 repo_key=repo_key,
                 alert_key=alert_key,
             ),
-            issuetype={"name": "Vulnerability"},
+            issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
         )
 
@@ -215,7 +216,7 @@ class JiraProject:
         jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
         jira_issue.set_severity(severity_mapping.get(severity, ''))
         jira_issue.set_alert_reference(alert_url)
-        jira_issue.set_repository(repo_id)
+        jira_issue.set_repository()
 
 
         logger.info(
@@ -332,19 +333,19 @@ class JiraIssue:
             self.rawissue.update(fields={"labels": self.labels})
 
     def set_exposure(self):
-        self.rawissue.update(fields={'customfield_35998': {'value': 'Internal'}})   
+        self.rawissue.update(fields={'customfield_12954': {'value': 'Internal'}})  
 
     def set_identification_source(self, value):
         self.rawissue.update(fields={'customfield_13397': {'value': value}})  
 
     def set_severity(self, value):
-        self.rawissue.update(fields={'customfield_10678': {'value': value}})
+        self.rawissue.update(fields={'customfield_10457': {'value': value}})
 
     def set_alert_reference(self, alert_url):
         self.rawissue.update(fields={'customfield_16748': alert_url})     
     
     def set_repository(self, repo_id):
-        self.rawissue.update(fields={'customfield_16751': [repo_id]})  
+        self.rawissue.update(fields={'customfield_16751': {'value': 'mini-meta-repo'}})  
         
 def parse_alert_info(desc):
     """
