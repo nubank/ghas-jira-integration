@@ -66,6 +66,7 @@ class Sync:
                 alert.get_tool_name(),
                 alert.get_severity(),
                 alert.get_full_description(),
+                alert.get_help(),
                 )
             newissue.adjust_state(alert.get_state())
             return alert.get_state()

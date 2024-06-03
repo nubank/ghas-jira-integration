@@ -33,6 +33,8 @@ DESC_TEMPLATE = """
 
 {full_description}
 
+{help_text}
+
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
 DO NOT MODIFY DESCRIPTION BELOW LINE.
@@ -190,6 +192,7 @@ class JiraProject:
         tool_name,
         severity,
         full_description,
+        help_text,
     ):
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -205,6 +208,7 @@ class JiraProject:
                 alert_num=alert_num,
                 repo_key=repo_key,
                 alert_key=alert_key,
+                help_text=help_text,
             ),
             issuetype={"name": "Vulnerability"},
             labels=self.labels,
