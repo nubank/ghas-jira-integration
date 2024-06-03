@@ -215,34 +215,6 @@ class JiraProject:
             labels=self.labels,
         )
 
-        logger.info(
-            "full_description field comming from alert class: {full_description}".format(
-                full_description=full_description
-            )
-        )
-
-        logger.info(
-            "help_text field comming from alert class: {help_text}".format(
-                help_text=help_text
-            )
-        )
-
-        logger.info(
-            "DESCRIPTION_TEMPLATE formated: {DESCRIPTION_TEMPLATE}".format(
-                DESCRIPTION_TEMPLATE=DESC_TEMPLATE.format(
-                    long_desc=long_desc,
-                    full_description=full_description,
-                    alert_url=alert_url,
-                    repo_id=repo_id,
-                    alert_type=alert_type,
-                    alert_num=alert_num,
-                    repo_key=repo_key,
-                    alert_key=alert_key,
-                    help_text=help_text,
-                )
-            )
-        )
-
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
         jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))

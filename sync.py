@@ -53,6 +53,19 @@ class Sync:
 
         # make sure that each alert has at least
         # one issue associated with it
+
+        logger.info(
+            "full_description field comming from alert class: {full_description}".format(
+                full_description=alert.get_full_description()
+            )
+        )
+
+        logger.info(
+            "help_text field comming from alert class: {help_text}".format(
+                help_text=alert.get_help()
+            )
+        )
+
         if len(issues) == 0:
             newissue = self.jira.create_issue(
                 alert.github_repo.repo_id,
