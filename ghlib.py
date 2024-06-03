@@ -257,6 +257,12 @@ class AlertBase:
     def long_desc(self):
         raise NotImplementedError
 
+    def get_full_description(self):
+        raise NotImplementedError
+    
+    def get_help(self):
+        raise NotImplementedError
+
     def hyperlink(self):
         return self.json["html_url"]
 
@@ -291,21 +297,6 @@ class AlertBase:
         if not security_severity_level:
             security_severity_level = self.json.get("severity", "")
         return security_severity_level
-
-    def has_rule(self):
-        return "rule" in self.json
-    
-    def get_full_description(self):
-        if self.has_rule():
-            return self.json["rule"].get("full_description", "")
-        else:
-            return ""
-        
-    def get_help(self):
-        if self.has_rule():
-            return self.json["rule"].get("help", "")
-        else:
-            return ""
     
     # def get_full_description(self):
     #     full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
@@ -347,6 +338,13 @@ class Alert(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
+    
+    def get_full_description(self):
+        return self.json["rule"].get("full_description", "")
+        
+    def get_help(self):
+        return self.json["rule"].get("help", "")
+
 
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
@@ -365,6 +363,12 @@ class Secret(AlertBase):
         return util.make_key(
             self.github_repo.repo_id + "/" + self.get_type() + "/" + str(self.number())
         )
+
+    def get_full_description(self):
+        return ""
+        
+    def get_help(self):
+        return ""
 
     def do_adjust_state(self, target_state):
         state = "open"
