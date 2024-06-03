@@ -258,9 +258,11 @@ class AlertBase:
         raise NotImplementedError
 
     def get_full_description(self):
+        logger.info("Calling get_full_description() from AlertBase class")
         raise NotImplementedError
     
     def get_help(self):
+        logger.info("Calling get_help() from AlertBase class")
         raise NotImplementedError
 
     def hyperlink(self):
@@ -340,9 +342,13 @@ class Alert(AlertBase):
         resp.raise_for_status()
     
     def get_full_description(self):
+        logger.info("Calling get_full_description() from Alert class")
+        logger.info("Full description: {full_description}".format(full_description=self.json["rule"].get("full_description", "")))
         return self.json["rule"].get("full_description", "")
         
     def get_help(self):
+        logger.info("Calling get_help() from Alert class")
+        logger.info("Help: {help}".format(help=self.json["rule"].get("help", "")))
         return self.json["rule"].get("help", "")
 
 
@@ -365,9 +371,11 @@ class Secret(AlertBase):
         )
 
     def get_full_description(self):
+        logger.info("Calling get_full_description() from Secret class")
         return ""
         
     def get_help(self):
+        logger.info("Calling get_help() from Secret class")
         return ""
 
     def do_adjust_state(self, target_state):
