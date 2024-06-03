@@ -292,12 +292,21 @@ class AlertBase:
             security_severity_level = self.json.get("severity", "")
         return security_severity_level
 
-    def get_full_description(self):
-        return self.json["rule"].get("full_description", "")
+    def has_rule(self):
+        return "rule" in self.json
     
+    def get_full_description(self):
+        if self.has_rule():
+            return self.json["rule"].get("full_description", "")
+        else:
+            return ""
+        
     def get_help(self):
-        return self.json["rule"].get("help", "")
-     
+        if self.has_rule():
+            return self.json["rule"].get("help", "")
+        else:
+            return ""
+    
     # def get_full_description(self):
     #     full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
     #     if not full_description:
