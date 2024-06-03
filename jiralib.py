@@ -31,10 +31,6 @@ TITLE_PREFIXES = {
 DESC_TEMPLATE = """
 {long_desc}
 
-{full_description}
-
-{help_text}
-
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
 DO NOT MODIFY DESCRIPTION BELOW LINE.
@@ -43,6 +39,11 @@ ALERT_TYPE={alert_type}
 ALERT_NUMBER={alert_num}
 REPOSITORY_KEY={repo_key}
 ALERT_KEY={alert_key}
+
+{full_description}
+
+{help_text}
+
 """
 
 
