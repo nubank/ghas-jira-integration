@@ -217,6 +217,8 @@ class JiraProject:
         jira_issue.set_severity(severity_mapping.get(severity, ''))
         jira_issue.set_alert_reference(alert_url)
         jira_issue.set_repository()
+        jira_issue.set_related_bu()
+        jira_issue.set_related_squad()
 
 
         logger.info(
@@ -344,8 +346,14 @@ class JiraIssue:
     def set_alert_reference(self, alert_url):
         self.rawissue.update(fields={'customfield_16748': alert_url})     
     
-    def set_repository(self, repo_id):
+    def set_repository(self):
         self.rawissue.update(fields={'customfield_16751': {'value': 'mini-meta-repo'}})  
+
+    def set_related_bu(self):
+        self.rawissue.update(fields={'customfield_12927': {'value': 'InfoSec'}})      
+
+    def set_related_squad(self):
+        self.rawissue.update(fields={'customfield_12957': {'value': 'Unknown'}})    
         
 def parse_alert_info(desc):
     """

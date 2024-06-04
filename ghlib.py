@@ -283,7 +283,7 @@ class AlertBase:
     def get_tool_name(self):
         tool_name = self.json.get("tool", {}).get("name", "")
         if not tool_name:
-            return
+            tool_name = "GitHub - Secret Scanning"
         return tool_name
     
     def get_severity(self):
