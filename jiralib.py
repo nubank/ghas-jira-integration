@@ -211,7 +211,7 @@ class JiraProject:
             labels=self.labels,
             customfield_12957='Unknown',
             customfield_12927={'value': 'Unknown'},
-            default_tool_name = 'GitHub - Secret Scanning'
+            default_tool_name = 'GitHub - Secret Scanning',
             customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
         )
 
