@@ -193,6 +193,7 @@ class JiraProject:
         full_description,
     ):
         default_tool_name = 'GitHub - Secret Scanning'
+        default_severity = 'Not Applicable'
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{prefix} {long_desc}".format(
@@ -218,7 +219,7 @@ class JiraProject:
         jira_issue = JiraIssue(self, raw)
         jira_issue.set_exposure()
 #        jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
-        jira_issue.set_severity(severity_mapping.get(severity, ''))
+        jira_issue.set_severity(severity_mapping.get(severity, default_severity))
         jira_issue.set_alert_reference(alert_url)
         jira_issue.set_repository()
 
