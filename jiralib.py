@@ -210,7 +210,7 @@ class JiraProject:
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
             customfield_12957='Unknown',
-            customfield_12927='InfoSec',
+            customfield_12927='Not Applicable',
         )
 
         jira_issue = JiraIssue(self, raw)
