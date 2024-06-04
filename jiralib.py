@@ -193,7 +193,7 @@ class JiraProject:
         full_description,
     ):
         default_tool_name = 'GitHub - Secret Scanning'
-        default_severity = 'Not Applicable'
+        default_severity = 'High'
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{prefix} {long_desc}".format(
