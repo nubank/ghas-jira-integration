@@ -350,7 +350,7 @@ class JiraIssue:
         self.rawissue.update(fields={'customfield_16748': alert_url})     
     
     def set_repository(self):
-        self.rawissue.update(fields={'customfield_16751': {'value': 'mini-meta-repo'}})  
+        self.rawissue.update(fields={'customfield_16751': [{'value': 'mini-meta-repo'}]})  
         
 def parse_alert_info(desc):
     """
