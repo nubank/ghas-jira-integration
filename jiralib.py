@@ -350,7 +350,7 @@ class JiraIssue:
         self.rawissue.update(fields={'customfield_16751': {'value': 'mini-meta-repo'}})  
 
     def set_related_bu(self):
-        self.rawissue.update(fields={'customfield_12927': {'value': 'InfoSec'}})      
+        self.rawissue.update(fields={'customfield_12927': {'value': 'Unknown'}})      
 
     def set_related_squad(self):
         self.rawissue.update(fields={'customfield_12957': {'value': 'Unknown'}})    
