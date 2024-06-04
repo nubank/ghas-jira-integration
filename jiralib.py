@@ -209,6 +209,8 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
+            customfield_12957='Unknown',
+            customfield_12927='Unknown',
         )
 
         jira_issue = JiraIssue(self, raw)
@@ -217,9 +219,6 @@ class JiraProject:
         jira_issue.set_severity(severity_mapping.get(severity, ''))
         jira_issue.set_alert_reference(alert_url)
         jira_issue.set_repository()
-        jira_issue.set_related_bu()
-        jira_issue.set_related_squad()
-
 
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
@@ -348,12 +347,6 @@ class JiraIssue:
     
     def set_repository(self):
         self.rawissue.update(fields={'customfield_16751': {'value': 'mini-meta-repo'}})  
-
-    def set_related_bu(self):
-        self.rawissue.update(fields={'customfield_12927': {'value': 'Unknown'}})      
-
-    def set_related_squad(self):
-        self.rawissue.update(fields={'customfield_12957': {'value': 'Unknown'}})    
         
 def parse_alert_info(desc):
     """
