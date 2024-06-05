@@ -197,7 +197,7 @@ class JiraProject:
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{prefix} {long_desc}".format(
-                prefix=TITLE_PREFIXES[alert_type], long_desc=long_desc
+                prefix=long_desc=long_desc
             ),
             description=DESC_TEMPLATE.format(
                 long_desc=long_desc,
