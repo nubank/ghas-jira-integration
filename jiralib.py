@@ -196,8 +196,8 @@ class JiraProject:
         default_severity = 'High'
         raw = self.j.create_issue(
             project=self.projectkey,
-            summary="{prefix} {long_desc}".format(
-                prefix=long_desc=long_desc
+            summary="{long_desc}".format(
+                long_desc=long_desc
             ),
             description=DESC_TEMPLATE.format(
                 long_desc=long_desc,
