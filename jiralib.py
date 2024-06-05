@@ -215,10 +215,11 @@ class JiraProject:
             customfield_12927={'value': 'Unknown'},
             customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
             customfield_10457={'value': (severity_mapping.get(severity, default_severity))},
+            customfield_12954={'value': 'Internal'},
         )
 
         jira_issue = JiraIssue(self, raw)
-        jira_issue.set_exposure()
+#        jira_issue.set_exposure()
 #        jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
 #        jira_issue.set_severity(severity_mapping.get(severity, default_severity))
         jira_issue.set_alert_reference(alert_url)
