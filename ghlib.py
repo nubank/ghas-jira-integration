@@ -229,7 +229,6 @@ class GHRepository:
         try:
             resp.raise_for_status()
             return Alert(self, resp.json())
-            print(json.dumps(resp.json(), indent=4))
         except HTTPError as httpe:
             if httpe.response.status_code == 404:
                 # A 404 suggests that the alert doesn't exist
