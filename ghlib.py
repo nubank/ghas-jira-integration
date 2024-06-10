@@ -27,9 +27,10 @@ class GitHub:
         self.token = token
 
     def default_headers(self):
-        auth = {"Authorization": "token " + self.token, "X-GitHub-Api-Version": "2022-11-28"}
-        auth.update(util.json_accept_header())
+        auth = {"Authorization": "token " + self.token, "X-GitHub-Api-Version": "2022-11-28", "Accept": "application/vnd.github+json"}
+#        auth.update(util.json_accept_header())
         return auth
+
 
     def getRepository(self, repo_id):
         return GHRepository(self, repo_id)
@@ -293,8 +294,9 @@ class AlertBase:
         return security_severity_level
 
     def get_full_description(self):
-        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+#        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
 #        full_description = json.dumps(self.json, indent=4)
+        full_description = self.json.get("rule", {},).get("full_description", "")
         if not full_description:
             full_description = "No description available."
         return full_description    
