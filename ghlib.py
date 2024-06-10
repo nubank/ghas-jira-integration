@@ -27,7 +27,7 @@ class GitHub:
         self.token = token
 
     def default_headers(self):
-        auth = {"Authorization": "token " + self.token}
+        auth = {"Authorization": "token " + self.token, "X-GitHub-Api-Version": "2022-11-28"}
         auth.update(util.json_accept_header())
         return auth
 
