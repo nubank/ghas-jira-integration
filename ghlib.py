@@ -310,6 +310,7 @@ class AlertBase:
     def get_language(self):
 #        language = self.json.get("most_recent_instance", {}).get("environment", "{}").get("language", "")
         environment_str = self.json.get("most_recent_instance", {}).get("environment", "{}")
+        environment_str = ast.literal_eval(environment_str)
         environment = json.loads(environment_str)
         language = environment.get("language", "")
         if not language:
@@ -317,10 +318,17 @@ class AlertBase:
         return language    
 
     def get_cwe(self):
-        cwe = self.json.get("rule", {}).get("tags", "")
-        if not cwe:
-            return
-        return cwe    
+#        cwe = self.json.get("rule", {}).get("tags", "")
+#        if not cwe:
+#            return
+#        return cwe  
+    tags = self.json.get("rule", {}).get("tags", [])
+    for tag in tags:
+        if tag.startswith("external/cwe/"):
+            cwe = tag.replace("external/cwe/", "")
+            return cwe
+    return None
+
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
