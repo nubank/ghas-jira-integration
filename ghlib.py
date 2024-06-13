@@ -311,10 +311,12 @@ class AlertBase:
     def get_language(self):
 #        language = self.json.get("most_recent_instance", {}).get("environment", "{}").get("language", "")
         environment = self.json.get("most_recent_instance", {}).get("environment", {})
-        language = environment.get("language", "")
-        if not language:
-            return
-        return language    
+        if environment is not None and isinstance(environment, dict):
+            language = environment.get("language", "")
+            if not language:
+                return
+            return language
+        return None
 
     def get_cwe(self):
 #        cwe = self.json.get("rule", {}).get("tags", "")
