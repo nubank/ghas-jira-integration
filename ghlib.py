@@ -309,8 +309,8 @@ class AlertBase:
         return identification_date
 
     def get_language(self):
-#        language = self.json.get("most_recent_instance", {}).get("environment", "{}").get("language", "")
-        environment = self.json.get("most_recent_instance", {}).get("environment", {})
+        environment_str = self.json.get("most_recent_instance", {}).get("environment", "{}")
+        environment = json.loads(environment_str)
         if environment is not None and isinstance(environment, dict):
             language = environment.get("language", "")
             if not language:
@@ -322,10 +322,11 @@ class AlertBase:
         tags = self.json.get("rule", {}).get("tags", [])
         cwe_list = []
         for tag in tags:
-            print(f"Processing tag: {tag}")
             if tag.startswith("external/cwe/"):
                 cwe = tag.replace("external/cwe/", "")
                 cwe_list.append(cwe)
+        if not cwe_list:
+            return
         return cwe_list
 
 class Alert(AlertBase):
