@@ -307,6 +307,12 @@ class AlertBase:
             return
         return identification_date
 
+    def get_language(self):
+        language = self.json.get("most_recent_instance", {}).get("environment", {})
+        if not language:
+            return
+        return language    
+
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
