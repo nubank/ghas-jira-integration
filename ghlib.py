@@ -310,9 +310,7 @@ class AlertBase:
 
     def get_language(self):
 #        language = self.json.get("most_recent_instance", {}).get("environment", "{}").get("language", "")
-        environment_str = self.json.get("most_recent_instance", {}).get("environment", "{}")
-        environment_str = ast.literal_eval(environment_str)
-        environment = json.loads(environment_str)
+        environment = self.json.get("most_recent_instance", {}).get("environment", {})
         language = environment.get("language", "")
         if not language:
             return
