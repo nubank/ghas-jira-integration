@@ -299,7 +299,13 @@ class AlertBase:
 #        full_description = self.json.get("rule", {},).get("full_description", "")
         if not full_description:
             full_description = "No description available."
-        return full_description    
+        return full_description   
+
+    def get_identification_date(self):
+        identification_date = self.json.get("created_at", "")
+        if not identification_date:
+            return
+        return identification_date
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
