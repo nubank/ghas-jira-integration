@@ -219,7 +219,8 @@ class JiraProject:
             customfield_16751=['mini-meta-repo'],
             customfield_16748=alert_url,
             customfield_21734=short_desc,
-            customfield_10611=identification_date
+            customfield_10611=identification_date,
+            customfield_15569={'value': 'Nubank'},
         )
 
         jira_issue = JiraIssue(self, raw)
