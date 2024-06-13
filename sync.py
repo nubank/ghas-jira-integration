@@ -68,6 +68,7 @@ class Sync:
                 alert.get_full_description(),
                 alert.get_identification_date(),
                 alert.get_language(),
+                alert.get_cwe(),
                 )
             newissue.adjust_state(alert.get_state())
             return alert.get_state()

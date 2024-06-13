@@ -313,6 +313,12 @@ class AlertBase:
             return
         return language    
 
+    def get_cwe(self):
+        cwe = self.json.get("rule", {}).get("tags", "")
+        if not cwe:
+            return
+        return cwe    
+
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
