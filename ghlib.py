@@ -326,6 +326,7 @@ class AlertBase:
         tags = self.json.get("rule", {}).get("tags", [])
         cwe_list = []
         for tag in tags:
+            print(f"Processing tag: {tag}")
             if tag.startswith("external/cwe/"):
                 cwe = tag.replace("external/cwe/", "")
                 cwe_list.append(cwe)
