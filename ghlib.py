@@ -308,7 +308,7 @@ class AlertBase:
         return identification_date
 
     def get_language(self):
-        language = self.json.get("most_recent_instance", {}).get("environment", {})
+        language = self.json.get("most_recent_instance", {}).get("environment", "{}").get("language", "")
         if not language:
             return
         return language    
