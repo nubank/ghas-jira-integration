@@ -324,11 +324,12 @@ class AlertBase:
 #            return
 #        return cwe  
         tags = self.json.get("rule", {}).get("tags", [])
+        cwe_list = []
         for tag in tags:
             if tag.startswith("external/cwe/"):
                 cwe = tag.replace("external/cwe/", "")
-                return [cwe]
-        return []
+                cwe_list.append(cwe)
+        return cwe_list
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
