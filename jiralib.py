@@ -191,6 +191,8 @@ class JiraProject:
         tool_name,
         severity,
         full_description,
+        identification_date,
+        language,
     ):
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
