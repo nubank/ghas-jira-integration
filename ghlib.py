@@ -327,8 +327,8 @@ class AlertBase:
         for tag in tags:
             if tag.startswith("external/cwe/"):
                 cwe = tag.replace("external/cwe/", "")
-                return cwe
-        return
+                return [cwe]
+        return []
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):

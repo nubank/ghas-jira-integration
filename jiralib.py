@@ -225,7 +225,7 @@ class JiraProject:
             customfield_10611=identification_date,
             customfield_15569={'value': 'Nubank'},
             customfield_16749=['language'],
-            customfield_17255=cwe,
+            customfield_17255=['cwe'],
         )
 
         jira_issue = JiraIssue(self, raw)
