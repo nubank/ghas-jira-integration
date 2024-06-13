@@ -322,12 +322,12 @@ class AlertBase:
 #        if not cwe:
 #            return
 #        return cwe  
-    tags = self.json.get("rule", {}).get("tags", [])
-    for tag in tags:
-        if tag.startswith("external/cwe/"):
-            cwe = tag.replace("external/cwe/", "")
-            return cwe
-    return None
+        tags = self.json.get("rule", {}).get("tags", [])
+        for tag in tags:
+            if tag.startswith("external/cwe/"):
+                cwe = tag.replace("external/cwe/", "")
+                return cwe
+        return None
 
 
 class Alert(AlertBase):
