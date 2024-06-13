@@ -316,13 +316,9 @@ class AlertBase:
             if not language:
                 return
             return language
-        return None
+        return
 
     def get_cwe(self):
-#        cwe = self.json.get("rule", {}).get("tags", "")
-#        if not cwe:
-#            return
-#        return cwe  
         tags = self.json.get("rule", {}).get("tags", [])
         cwe_list = []
         for tag in tags:

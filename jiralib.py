@@ -193,7 +193,7 @@ class JiraProject:
         full_description,
         identification_date,
         language,
-        cwe,
+        cwe_list,
     ):
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
@@ -225,7 +225,7 @@ class JiraProject:
             customfield_10611=identification_date,
             customfield_15569={'value': 'Nubank'},
             customfield_16749=language,
-            customfield_17255=cwe_list,
+            customfield_17255={'value': cwe_list},
         )
 
         jira_issue = JiraIssue(self, raw)
