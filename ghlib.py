@@ -314,9 +314,9 @@ class AlertBase:
         if environment is not None and isinstance(environment, dict):
             language = environment.get("language", "")
             if not language:
-                return
-            return language
-        return
+                return []
+            return [language]
+        return []
 
     def get_cwe(self):
         tags = self.json.get("rule", {}).get("tags", [])
