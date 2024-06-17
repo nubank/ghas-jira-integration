@@ -299,7 +299,7 @@ class AlertBase:
 #        full_description = json.dumps(self.json, indent=4)
 #        full_description = self.json.get("rule", {},).get("full_description", "")
         if not full_description:
-            full_description = "No description available."
+            full_description = "Secret found on code. No more description available."
         return full_description   
 
     def get_identification_date(self):
