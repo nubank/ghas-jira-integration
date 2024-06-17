@@ -126,9 +126,10 @@ class GitHub:
 
 
 class GHRepository:
-    def __init__(self, github, repo_id):
+    def __init__(self, github, repo_id, owner):
         self.gh = github
         self.repo_id = repo_id
+        self.owner = owner
 
     def list_hooks(self):
         return self.gh.list_hooks_helper(self.repo_id)
