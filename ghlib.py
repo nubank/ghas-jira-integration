@@ -229,7 +229,6 @@ class GHRepository:
         )
         try:
             resp.raise_for_status()
-            print(json.dumps(resp.json(), indent=4)) 
             return Alert(self, resp.json())
         except HTTPError as httpe:
             if httpe.response.status_code == 404:
@@ -296,7 +295,8 @@ class AlertBase:
         return security_severity_level
 
     def get_full_description(self):
-        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+#        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+        full_description = json.dumps(resp.json(), indent=4) 
 #        full_description = json.dumps(self.json, indent=4)
 #        full_description = self.json.get("rule", {},).get("full_description", "")
         if not full_description:
