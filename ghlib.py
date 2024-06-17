@@ -32,7 +32,6 @@ class GitHub:
 #        auth.update(util.json_accept_header())
         return auth
 
-
     def getRepository(self, repo_id):
         return GHRepository(self, repo_id)
 
@@ -126,10 +125,9 @@ class GitHub:
 
 
 class GHRepository:
-    def __init__(self, github, repo_id, owner):
+    def __init__(self, github, repo_id):
         self.gh = github
         self.repo_id = repo_id
-        self.owner = owner
 
     def list_hooks(self):
         return self.gh.list_hooks_helper(self.repo_id)
@@ -218,7 +216,7 @@ class GHRepository:
         if not self.isprivate():
             return
         for a in self.alerts_helper("secret-scanning", state):
-            yield Secret(self, a, self.owner, self.epo, self.alert_number, self.token, self.repo_id)
+            yield Secret(self, a)
 
     def get_alert(self, alert_num):
         resp = requests.get(
@@ -240,15 +238,10 @@ class GHRepository:
                 raise         
 
 class AlertBase:
-    def __init__(self, github_repo, json, owner, repo, alert_number, token, repo_id):
+    def __init__(self, github_repo, json):
         self.github_repo = github_repo
         self.gh = github_repo.gh
         self.json = json
-        self.owner = owner
-        self.repo = repo
-        self.alert_number = alert_number
-        self.token = token
-        self.repo_id = repo_id
 
     def get_state(self):
         return self.json["state"] == "open"
@@ -301,16 +294,7 @@ class AlertBase:
         return security_severity_level
 
     def get_full_description(self):
-#       full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
-        resp = requests.get(
-            "{api_url}/repos/{repo_id}/code-scanning/alerts/{alert_num}".format(
-                api_url=self.gh.url, repo_id=self.repo_id, alert_num=alert_num
-            ),
-            headers=self.gh.default_headers(),
-            timeout=util.REQUEST_TIMEOUT,
-        )
-        resp.raise_for_status()
-        full_description = json.dumps(resp.json(), indent=4) 
+       full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "") 
 #        full_description = json.dumps(self.json, indent=4)
 #        full_description = self.json.get("rule", {},).get("full_description", "")
         if not full_description:
@@ -345,8 +329,8 @@ class AlertBase:
         return cwe_list
 
 class Alert(AlertBase):
-    def __init__(self, github_repo, json, owner, repo, alert_number, token, repo_id):
-        AlertBase.__init__(self, github_repo, json, owner, repo, alert_number, token, repo_id)
+    def __init__(self, github_repo, json):
+        AlertBase.__init__(self, github_repo, json)
 
     def can_transition(self):
         return self.json["state"] != "fixed"
@@ -391,8 +375,8 @@ class Alert(AlertBase):
 #        return full_description
     
 class Secret(AlertBase):
-    def __init__(self, github_repo, json, owner, repo, alert_number, token, repo_id):
-        AlertBase.__init__(self, github_repo, json, owner, repo, alert_number, token, repo_id)
+    def __init__(self, github_repo, json):
+        AlertBase.__init__(self, github_repo, json)
 
     def can_transition(self):
         return True
