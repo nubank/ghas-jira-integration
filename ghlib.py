@@ -217,7 +217,7 @@ class GHRepository:
         if not self.isprivate():
             return
         for a in self.alerts_helper("secret-scanning", state):
-            yield Secret(self, a, owner, repo, alert_number, token, repo_id)
+            yield Secret(self, a, self.owner, self.epo, self.alert_number, self.token, self.repo_id)
 
     def get_alert(self, alert_num):
         resp = requests.get(
