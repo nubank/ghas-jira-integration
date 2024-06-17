@@ -295,7 +295,15 @@ class AlertBase:
         return security_severity_level
 
     def get_full_description(self):
-#        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+#       full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "")
+        resp = requests.get(
+            "{api_url}/repos/{repo_id}/code-scanning/alerts/{alert_num}".format(
+                api_url=self.gh.url, repo_id=self.repo_id, alert_num=alert_num
+            ),
+            headers=self.gh.default_headers(),
+            timeout=util.REQUEST_TIMEOUT,
+        )
+        resp.raise_for_status()
         full_description = json.dumps(resp.json(), indent=4) 
 #        full_description = json.dumps(self.json, indent=4)
 #        full_description = self.json.get("rule", {},).get("full_description", "")
