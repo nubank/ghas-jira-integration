@@ -226,6 +226,7 @@ class JiraProject:
             customfield_15569={'value': 'Nubank'},
             customfield_16749=language,
             customfield_17255=cwe_list,
+            customfield_10548={'value': '2021:A04 - Insecure Design'},
         )
 
         jira_issue = JiraIssue(self, raw)
