@@ -229,6 +229,7 @@ class GHRepository:
         )
         try:
             resp.raise_for_status()
+            print(json.dumps(resp.json(), indent=4)) 
             return Alert(self, resp.json())
         except HTTPError as httpe:
             if httpe.response.status_code == 404:
