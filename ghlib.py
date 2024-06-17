@@ -239,10 +239,15 @@ class GHRepository:
                 raise         
 
 class AlertBase:
-    def __init__(self, github_repo, json):
+    def __init__(self, github_repo, json, owner, repo, alert_number, token, repo_id):
         self.github_repo = github_repo
         self.gh = github_repo.gh
         self.json = json
+        self.owner = owner
+        self.repo = repo
+        self.alert_number = alert_number
+        self.token = token
+        self.repo_id = repo_id
 
     def get_state(self):
         return self.json["state"] == "open"
