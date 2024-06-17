@@ -217,7 +217,7 @@ class GHRepository:
         if not self.isprivate():
             return
         for a in self.alerts_helper("secret-scanning", state):
-            yield Secret(self, a)
+            yield Secret(self, a, repo, alert_number, token, repo_id)
 
     def get_alert(self, alert_num):
         resp = requests.get(
@@ -344,8 +344,8 @@ class AlertBase:
         return cwe_list
 
 class Alert(AlertBase):
-    def __init__(self, github_repo, json):
-        AlertBase.__init__(self, github_repo, json)
+    def __init__(self, github_repo, json, owner, repo, alert_number, token, repo_id):
+        AlertBase.__init__(self, github_repo, json, owner, repo, alert_number, token, repo_id)
 
     def can_transition(self):
         return self.json["state"] != "fixed"
