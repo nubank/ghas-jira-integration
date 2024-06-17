@@ -230,11 +230,6 @@ class JiraProject:
         )
 
         jira_issue = JiraIssue(self, raw)
-#        jira_issue.set_exposure()
-#        jira_issue.set_identification_source(tool_mapping.get(tool_name, ''))
-#        jira_issue.set_severity(severity_mapping.get(severity, default_severity))
-#        jira_issue.set_alert_reference(alert_url)
-#        jira_issue.set_repository()
 
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
@@ -348,21 +343,6 @@ class JiraIssue:
     def persist_labels(self, labels):
         if labels:
             self.rawissue.update(fields={"labels": self.labels})
-
-    def set_exposure(self):
-        self.rawissue.update(fields={'customfield_12954': {'value': 'Internal'}})  
-
-    def set_identification_source(self, value):
-        self.rawissue.update(fields={'customfield_13397': {'value': value}})  
-
-    def set_severity(self, value):
-        self.rawissue.update(fields={'customfield_10457': {'value': value}})
-
-    def set_alert_reference(self, alert_url):
-        self.rawissue.update(fields={'customfield_16748': alert_url})     
-    
-    def set_repository(self):
-        self.rawissue.update(fields={'customfield_16751': ['mini-meta-repo']})  
         
 def parse_alert_info(desc):
     """
