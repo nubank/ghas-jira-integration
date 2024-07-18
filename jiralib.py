@@ -238,7 +238,7 @@ class JiraProject:
             )    
         )
         logger.info(
-            "Identification source = {tool_name}.".format(
+            "Identification source ={tool_name}.".format(
                 tool_name=tool_name
             )    
         )
