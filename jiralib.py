@@ -189,7 +189,6 @@ class JiraProject:
         repo_key,
         alert_key,
         tool_name,
-        default_tool_name,
         severity,
         full_description,
         identification_date,
