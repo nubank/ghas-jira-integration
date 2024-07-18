@@ -227,7 +227,7 @@ class JiraProject:
             customfield_16749=language,
             customfield_17255=cwe_list,
             customfield_10548={'value': '2021:A04 - Insecure Design'},
-            customfield_18385='MobSec',
+            customfield_18385={'value': 'MobSec'},
         )
 
         jira_issue = JiraIssue(self, raw)
