@@ -189,13 +189,14 @@ class JiraProject:
         repo_key,
         alert_key,
         tool_name,
+        default_tool_name,
         severity,
         full_description,
         identification_date,
         language,
         cwe_list,
     ):
-        default_tool_name = 'GitHub - Secret Scanning'
+        default_tool_name = 'null'
         default_severity = 'High'
         raw = self.j.create_issue(
             project=self.projectkey,
