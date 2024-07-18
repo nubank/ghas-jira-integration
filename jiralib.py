@@ -195,7 +195,7 @@ class JiraProject:
         language,
         cwe_list,
     ):
-        default_tool_name = 'null'
+        default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -216,7 +216,7 @@ class JiraProject:
             labels=self.labels,
             customfield_12957='Unknown',
             customfield_12927={'value': 'Unknown'},
-            customfield_13397={'value': 'null'},
+            customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
             customfield_10457={'value': (severity_mapping.get(severity, default_severity))},
             customfield_12954={'value': 'Internal'},
             customfield_16751=['mini-meta-repo'],
