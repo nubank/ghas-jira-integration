@@ -195,7 +195,12 @@ class JiraProject:
         language,
         cwe_list,
     ):
-        default_tool_name = 'GitHub - Secret Scanning'
+        default_tool_name = 'GitHub - Secret Scanning'  
+         
+        if tool_name == 'GitHub - Secret Scanning':
+            print(f"Ignorando alerta do tipo {tool_name}")
+            return None 
+
         default_severity = 'High'
         raw = self.j.create_issue(
             project=self.projectkey,
