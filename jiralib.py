@@ -195,6 +195,9 @@ class JiraProject:
         language,
         cwe_list,
     ):
+        if alert_type in ["Secret"]:
+            return None
+
         default_tool_name = 'GitHub - Secret Scanning'  
         valid_tool_value = tool_mapping.get(tool_name, default_tool_name)
         if not valid_tool_value: 
