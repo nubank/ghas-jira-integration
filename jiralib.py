@@ -195,6 +195,9 @@ class JiraProject:
         language,
         cwe_list,
     ):
+        if alert_type in ["Secret"]:
+            return None
+
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         raw = self.j.create_issue(

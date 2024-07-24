@@ -70,6 +70,10 @@ class Sync:
                 alert.get_language(),
                 alert.get_cwe(),
                 )
+
+            if newissue is None:
+                return None    
+                 
             newissue.adjust_state(alert.get_state())
             return alert.get_state()
 
