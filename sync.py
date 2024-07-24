@@ -70,9 +70,8 @@ class Sync:
                 alert.get_language(),
                 alert.get_cwe(),
                 )
-                
+
             if newissue is None:
-                print(f"Skipping alert {alert} as it is not processed.")
                 return None    
 
             newissue.adjust_state(alert.get_state())
