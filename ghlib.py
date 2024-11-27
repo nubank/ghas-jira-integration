@@ -203,6 +203,67 @@ class GHRepository:
         resp.raise_for_status()
         return resp.json()
 
+    def fetch_codeowners(self):
+        codeowners_paths = [
+            ".github/CODEOWNERS"
+        ]
+        
+        for path in codeowners_paths:
+            try:
+                resp = requests.get(
+                    f"{self.gh.url}/repos/{self.repo_id}/contents/{path}",
+                    headers=self.gh.default_headers(),
+                    timeout=util.REQUEST_TIMEOUT
+                )
+                resp.raise_for_status()
+                
+                content = resp.json().get('content')
+                if content:
+                    import base64
+                    return base64.b64decode(content).decode('utf-8')
+                    
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    continue
+                raise
+                
+        return None
+
+    def parse_codeowners_for_path(self, file_path):
+        # Indent the import statement
+        import fnmatch
+        
+        # Get CODEOWNERS content
+        content = self.fetch_codeowners()
+        if not content:
+            return []
+            
+        teams = []
+        # Parse each line of CODEOWNERS
+        for line in content.splitlines():
+            line = line.strip()
+            
+            # Skip empty lines and comments
+            if not line or line.startswith('#'):
+                continue
+                
+            # Split line into pattern and owners
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+                
+            pattern = parts[0]
+            owners = parts[1:]
+            
+            # Check if file_path matches the pattern
+            if fnmatch.fnmatch(file_path, pattern):
+                # Clean team names by removing org prefixes
+                for owner in owners:
+                    clean_team = owner.replace('@org/', '').replace('@nubank/', '')
+                    teams.append(clean_team)
+                
+        return teams
+
     def isprivate(self):
         return self.get_info()["private"]
 
@@ -286,6 +347,19 @@ class AlertBase:
         if not tool_name:
             return
         return tool_name
+
+    def get_location(self):
+        location = self.json.get("most_recent_instance", {}).get("location", {}).get("path", "")
+        if not location:
+            return
+        return location    
+
+    def get_responsible_teams(self):
+        file_path = self.get_location()
+        if not file_path:
+            return []
+            
+        return self.github_repo.parse_codeowners_for_path(file_path)    
     
     def get_severity(self):
         security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")

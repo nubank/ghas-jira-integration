@@ -34,6 +34,10 @@ DESC_TEMPLATE = """
 
 {full_description}
 
+{location}
+
+{responsible_teams}
+
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
 DO NOT MODIFY DESCRIPTION BELOW LINE.
@@ -194,6 +198,8 @@ class JiraProject:
         identification_date,
         language,
         cwe_list,
+        location,
+        responsible_teams,
     ):
         if alert_type in ["Secret"]:
             return None
@@ -214,10 +220,13 @@ class JiraProject:
                 alert_num=alert_num,
                 repo_key=repo_key,
                 alert_key=alert_key,
+                location=location,
+                responsible_teams=responsible_teams,
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
             customfield_12957='Unknown',
+            #customfield_12957={'value': responsible_teams[0] if responsible_teams else 'Unknown'},  
             customfield_12927={'value': 'Unknown'},
             customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
             customfield_10457={'value': (severity_mapping.get(severity, default_severity))},
