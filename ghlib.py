@@ -358,8 +358,8 @@ class AlertBase:
         file_path = self.get_location()
         if not file_path:
             return []
-            
-        return self.github_repo.parse_codeowners_for_path(file_path)    
+        responsible_teams = self.github_repo.parse_codeowners_for_path(file_path)
+        return responsible_teams
     
     def get_severity(self):
         security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")
