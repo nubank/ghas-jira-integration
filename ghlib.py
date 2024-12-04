@@ -466,6 +466,9 @@ class Secret(AlertBase):
             self.github_repo.repo_id + "/" + self.get_type() + "/" + str(self.number())
         )
 
+    def location(self):
+        return ''
+
     def do_adjust_state(self, target_state):
         state = "open"
         resolution = ""
