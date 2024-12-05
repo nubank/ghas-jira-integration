@@ -230,15 +230,16 @@ class GHRepository:
         return None
 
     def parse_codeowners_for_path(self, file_path):
-        # Indent the import statement
         import fnmatch
         
-        # Get CODEOWNERS content
         content = self.fetch_codeowners()
         if not content:
             return []
             
         teams = []
+        best_match = None
+        best_match_length = 0
+        
         # Parse each line of CODEOWNERS
         for line in content.splitlines():
             line = line.strip()
@@ -255,13 +256,20 @@ class GHRepository:
             pattern = parts[0]
             owners = parts[1:]
             
-            # Check if file_path matches the pattern
+            # Check if pattern matches and is more specific than current best match
             if fnmatch.fnmatch(file_path, pattern):
-                # Clean team names by removing org prefixes
-                for owner in owners:
-                    clean_team = owner.replace('@org/', '').replace('@nubank/', '')
-                    teams.append(clean_team)
-                
+                pattern_length = len(pattern.strip('/').split('/'))
+                if pattern_length > best_match_length:
+                    best_match = (pattern, owners)
+                    best_match_length = pattern_length
+        
+        # Use the most specific match found
+        if best_match:
+            pattern, owners = best_match
+            for owner in owners:
+                clean_team = owner.replace('@nubank/', '')
+                teams.append(clean_team)
+                    
         return teams
 
     def isprivate(self):
