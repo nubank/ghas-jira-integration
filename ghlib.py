@@ -232,13 +232,41 @@ class GHRepository:
     def parse_codeowners_for_path(self, file_path):
         import fnmatch
         
+        def calculate_pattern_score(pattern, file_path):
+            # Remove leading/trailing slashes
+            pattern = pattern.strip('/')
+            path = file_path.strip('/')
+            
+            # Split into segments
+            pattern_parts = pattern.split('/')
+            path_parts = path.split('/')
+            
+            score = 0
+            
+            # Calculate exact matches and wildcard matches
+            for i, p_part in enumerate(pattern_parts):
+                if i >= len(path_parts):
+                    break
+                    
+                # Exact match worth 2 points
+                if p_part == path_parts[i]:
+                    score += 2
+                # Wildcard match worth 1 point
+                elif '*' in p_part:
+                    score += 1
+                    
+            # Add bonus for pattern length to favor more specific patterns
+            score += len(pattern_parts) * 0.5
+            
+            return score
+    
         content = self.fetch_codeowners()
         if not content:
             return []
             
         teams = []
         best_match = None
-        best_match_length = 0
+        best_score = 0
         
         # Parse each line of CODEOWNERS
         for line in content.splitlines():
@@ -256,14 +284,14 @@ class GHRepository:
             pattern = parts[0]
             owners = parts[1:]
             
-            # Check if pattern matches and is more specific than current best match
+            # Check if pattern matches and calculate score
             if fnmatch.fnmatch(file_path, pattern):
-                pattern_length = len(pattern.strip('/').split('/'))
-                if pattern_length > best_match_length:
+                score = calculate_pattern_score(pattern, file_path)
+                if score > best_score:
                     best_match = (pattern, owners)
-                    best_match_length = pattern_length
+                    best_score = score
         
-        # Use the most specific match found
+        # Use the highest scoring match
         if best_match:
             pattern, owners = best_match
             for owner in owners:
