@@ -237,7 +237,8 @@ class GHRepository:
         if not content:
             return []
             
-        teams = []
+        all_matches = []  # Store all matching patterns and their teams
+        
         # Parse each line of CODEOWNERS
         for line in content.splitlines():
             line = line.strip()
@@ -256,13 +257,20 @@ class GHRepository:
             
             # Check if file_path matches the pattern
             if fnmatch.fnmatch(file_path, pattern):
+                match_teams = []
                 # Clean team names by removing org prefixes
                 for owner in owners:
                     clean_team = owner.replace('@org/', '').replace('@nubank/', '')
-                    teams.append(clean_team)
+                    match_teams.append(clean_team)
                 
-        return teams
-
+                # Store pattern and its teams
+                all_matches.append({
+                    'pattern': pattern,
+                    'teams': match_teams
+                })
+        
+        return all_matches
+        
     def isprivate(self):
         return self.get_info()["private"]
 
