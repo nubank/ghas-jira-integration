@@ -231,6 +231,7 @@ class GHRepository:
 
     def parse_codeowners_for_path(self, file_path):
         import fnmatch
+        import logging
         
         # Get CODEOWNERS content
         content = self.fetch_codeowners()
@@ -256,21 +257,32 @@ class GHRepository:
             owners = parts[1:]
             
             # Check if file_path matches the pattern
-            if fnmatch.fnmatch(file_path, pattern):
-                match_teams = []
-                # Clean team names by removing org prefixes
-                for owner in owners:
-                    clean_team = owner.replace('@org/', '').replace('@nubank/', '')
-                    match_teams.append(clean_team)
-                
-                # Store pattern and its teams
-                all_matches.append({
-                    'pattern': pattern,
-                    'teams': match_teams
-                })
+            try:
+                if fnmatch.fnmatch(file_path, pattern):
+                    logging.debug(f"Found match: {pattern} for file: {file_path}")
+                    match_teams = []
+                    # Clean team names by removing org prefixes
+                    for owner in owners:
+                        clean_team = owner.replace('@org/', '').replace('@nubank/', '')
+                        match_teams.append(clean_team)
+                    
+                    # Store pattern and its teams
+                    match_info = {
+                        'pattern': pattern,
+                        'teams': match_teams,
+                        'specificity': len(pattern.strip('/').split('/'))  # Calculate pattern specificity
+                    }
+                    all_matches.append(match_info)
+                    
+            except Exception as e:
+                logging.error(f"Error matching pattern {pattern}: {str(e)}")
+                continue
+        
+        # Sort matches by specificity (most specific first)
+        all_matches.sort(key=lambda x: x['specificity'], reverse=True)
         
         return all_matches
-        
+
     def isprivate(self):
         return self.get_info()["private"]
 
