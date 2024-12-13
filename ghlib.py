@@ -229,8 +229,7 @@ class GHRepository:
                 
         return None
 
-   def parse_codeowners_for_path(self, file_path):
-        # Indent the import statement
+    def parse_codeowners_for_path(self, file_path):
         import fnmatch
         
         # Get CODEOWNERS content
