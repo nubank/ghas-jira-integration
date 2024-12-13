@@ -232,13 +232,18 @@ class GHRepository:
     def parse_codeowners_for_path(self, file_path):
         import fnmatch
         import logging
+        from pathlib import Path
+        
+        # Normalize file path
+        file_path = str(Path(file_path)).lstrip('/')
+        logging.debug(f"Normalized file path: {file_path}")
         
         # Get CODEOWNERS content
         content = self.fetch_codeowners()
         if not content:
             return []
             
-        all_matches = []  # Store all matching patterns and their teams
+        all_matches = []
         
         # Parse each line of CODEOWNERS
         for line in content.splitlines():
@@ -253,33 +258,48 @@ class GHRepository:
             if len(parts) < 2:
                 continue
                 
-            pattern = parts[0]
+            pattern = parts[0].lstrip('/')  # Normalize pattern
             owners = parts[1:]
             
-            # Check if file_path matches the pattern
+            logging.debug(f"Checking pattern: {pattern} against path: {file_path}")
+            
+            # Try both exact and wildcard matches
             try:
+                matches = False
                 if fnmatch.fnmatch(file_path, pattern):
+                    matches = True
+                elif fnmatch.fnmatch(file_path, f"**/{pattern}"):
+                    matches = True
+                    
+                if matches:
                     logging.debug(f"Found match: {pattern} for file: {file_path}")
                     match_teams = []
-                    # Clean team names by removing org prefixes
+                    # Clean team names
                     for owner in owners:
                         clean_team = owner.replace('@org/', '').replace('@nubank/', '')
                         match_teams.append(clean_team)
                     
-                    # Store pattern and its teams
+                    # Calculate pattern specificity
+                    specificity = len(pattern.strip('/').split('/'))
+                    if '*' in pattern:
+                        specificity -= 0.1  # Slightly decrease specificity for wildcard patterns
+                    
+                    # Store match info
                     match_info = {
                         'pattern': pattern,
                         'teams': match_teams,
-                        'specificity': len(pattern.strip('/').split('/'))  # Calculate pattern specificity
+                        'specificity': specificity
                     }
                     all_matches.append(match_info)
+                    logging.debug(f"Added match: {match_info}")
                     
             except Exception as e:
                 logging.error(f"Error matching pattern {pattern}: {str(e)}")
                 continue
         
-        # Sort matches by specificity (most specific first)
+        # Sort by specificity
         all_matches.sort(key=lambda x: x['specificity'], reverse=True)
+        logging.debug(f"All matches found: {all_matches}")
         
         return all_matches
 
