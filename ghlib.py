@@ -231,6 +231,18 @@ class GHRepository:
 
     def parse_codeowners_for_path(self, file_path):
         import fnmatch
+        import logging
+        
+        # Patterns to ignore
+        ignore_patterns = [
+            '/native/',
+            '/android/',
+            '/ios/',
+            '*.kt',
+            '*.java', 
+            '*.swift',
+            '*.h'
+        ]
         
         # Get CODEOWNERS content
         content = self.fetch_codeowners()
@@ -242,8 +254,8 @@ class GHRepository:
         for line in content.splitlines():
             line = line.strip()
             
-            # Skip empty lines and comments
-            if not line or line.startswith('#'):
+            # Skip empty lines, comments and section headers
+            if not line or line.startswith('#') or line.startswith('##'):
                 continue
                 
             # Split line into pattern and owners
@@ -252,6 +264,12 @@ class GHRepository:
                 continue
                 
             pattern = parts[0]
+            
+            # Skip if pattern is in ignore list
+            if pattern in ignore_patterns:
+                logging.debug(f"Ignoring pattern: {pattern}")
+                continue
+                
             owners = parts[1:]
             
             # Check if file_path matches the pattern
