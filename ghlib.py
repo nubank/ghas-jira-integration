@@ -232,18 +232,18 @@ class GHRepository:
     def calculate_pattern_score(self, file_path, pattern, owners_list):
 
         file_path = file_path.strip('/').split('/')
-        highest_score = -float('inf') 
-        original_pattern = pattern
         pattern = pattern.strip('/').split('/') 
-        score = 0
-        consecutive_matches = 0
+
+        highest_score = -float('inf')
+        
         full_score_line_list = []
 
-        for i, pattern_part in enumerate(pattern):
-            print("Pattern part:", pattern_part)
-            print("File path:", file_path)
-            print ("Pattern:", pattern)
+        original_pattern = pattern
 
+        score = 0
+        consecutive_matches = 0
+
+        for i, pattern_part in enumerate(pattern):
             if i >= len(file_path):
                 break
             
@@ -265,16 +265,14 @@ class GHRepository:
 
     def parse_codeowners_for_path(self, file_path):
         
-        # Get CODEOWNERS content
         content = self.fetch_codeowners()
         if not content:
             return []
             
         all_scores_from_each_line = dict()
-        for line in content.splitlines():
-            
-            line = line.strip()
 
+        for line in content.splitlines():
+            line = line.strip()
             parts = line.split()
             if len(parts) < 2:
                 continue
@@ -292,7 +290,7 @@ class GHRepository:
 
         sorted_scores = sorted(all_scores_from_each_line.items(), key=lambda x: x[1]['score'], reverse=True)    
         owners = sorted_scores[0][1]['owners']
-        return owners
+        return pattern, owners
 
     def isprivate(self):
         return self.get_info()["private"]
