@@ -244,7 +244,7 @@ class GHRepository:
 
 
             for patterns in pattern_parts:  
-                pattern_without_wildcards = [part for part in patterns if parte != '*']
+                pattern_without_wildcards = [part for part in patterns if part != '*']
             
             score = len(patterns)
             consecutive_matches = 0
