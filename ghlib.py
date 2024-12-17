@@ -229,7 +229,7 @@ class GHRepository:
                 
         return None
 
-    def calculate_pattern_score(file_path, pattern, owners_list):
+    def calculate_pattern_score(self, file_path, pattern, owners_list):
 
         file_path = file_path.strip('/').split('/')
         highest_score = -float('inf') 
