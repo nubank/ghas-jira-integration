@@ -234,21 +234,23 @@ class GHRepository:
         import logging
         
         def calculate_pattern_score(pattern, path):
-            # Remove line number if present
+            
             if ':' in path:
                 path = path.split(':')[0]
                 
             pattern_parts = pattern.strip('/').split('/')
             path_parts = path.strip('/').split('/')
+            highest_score = -float('inf') 
+
+
+            for patterns in pattern_parts:  
+            pattern_without_wildcards = [part for part in patterns if parte != '*']
             
-            # Increased base score from pattern length
-            score = len(pattern_parts) * 20  # Increased multiplier
-            
-            # Track consecutive matches
+            score = len(patterns)
             consecutive_matches = 0
             
             # Extra points for exact matches with position weighting
-            for i, pattern_part in enumerate(pattern_parts):
+            for i, pattern_part in enumerate(patterns):
                 if i >= len(path_parts):
                     break
                     
@@ -257,22 +259,12 @@ class GHRepository:
                 if pattern_part == path_parts[i]:
                     score += 40 * position_multiplier  # Doubled exact match bonus
                     consecutive_matches += 1
-                elif pattern_part == '*':
-                    score += 5 * position_multiplier  # Small bonus for wildcards
-                    consecutive_matches = 0
-                elif pattern_part.startswith('*') or pattern_part.endswith('*'):
-                    score += 10 * position_multiplier  # Moderate bonus for partial wildcards
-                    consecutive_matches = 0
+
                     
-            # Bonus for consecutive matches
-            score += consecutive_matches * 30
-                    
-            # Increased penalty for extension-only patterns
-            if pattern.startswith('*.'):
-                score -= 100  # Doubled penalty
-                
-            logging.debug(f"Pattern: {pattern}, Score: {score}, Path: {path}")
-            return score
+            score += consecutive_matches * 50
+            highest_score = max(highest_score, score)
+                                    
+            return highest_score
         
         # Rest of the function remains the same
         content = self.fetch_codeowners()
@@ -309,8 +301,7 @@ class GHRepository:
                 })
         
         # Sort by score before returning
-        all_matches.sort(key=lambda x: x['score'], reverse=True)
-        logging.debug(f"All matches for {file_path}:")
+        logging.debug(f"All matches for {file_path}")
         for match in all_matches:
             logging.debug(f"Pattern: {match['pattern']}, Score: {match['score']}, Teams: {match['teams']}")
             
