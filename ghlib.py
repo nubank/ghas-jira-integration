@@ -233,12 +233,41 @@ class GHRepository:
         import fnmatch
         import logging
         
+        def calculate_pattern_score(pattern, path):
+            # Remove line number if present
+            if ':' in path:
+                path = path.split(':')[0]
+                
+            pattern_parts = pattern.strip('/').split('/')
+            path_parts = path.strip('/').split('/')
+            
+            # Base score from pattern length
+            score = len(pattern_parts) * 10
+            
+            # Extra points for exact matches
+            for i, pattern_part in enumerate(pattern_parts):
+                if i >= len(path_parts):
+                    break
+                    
+                if pattern_part == path_parts[i]:
+                    score += 20  # Exact match bonus
+                elif pattern_part == '*':
+                    score += 5   # Wildcard match bonus
+                elif pattern_part.startswith('*') or pattern_part.endswith('*'):
+                    score += 10  # Partial wildcard bonus
+                    
+            # Penalty for extension-only patterns
+            if pattern.startswith('*.'):
+                score -= 50
+                
+            return score
+        
         # Get CODEOWNERS content
         content = self.fetch_codeowners()
         if not content:
             return []
             
-        all_matches = []  # Store all matching patterns and their teams
+        all_matches = []
         
         # Parse each line of CODEOWNERS
         for line in content.splitlines():
@@ -259,38 +288,40 @@ class GHRepository:
             # Check if file_path matches the pattern
             if fnmatch.fnmatch(file_path, pattern):
                 match_teams = []
-                # Clean team names by removing org prefixes
+                # Clean team names
                 for owner in owners:
                     clean_team = owner.replace('@org/', '').replace('@nubank/', '')
                     match_teams.append(clean_team)
+                    
+                # Calculate pattern score
+                score = calculate_pattern_score(pattern, file_path)
                 
-                # Store pattern, its teams, and pattern length
+                # Store pattern, teams and score
                 all_matches.append({
                     'pattern': pattern,
                     'teams': match_teams,
-                    'length': len(pattern.strip('/').split('/'))
+                    'score': score
                 })
         
         return all_matches
     
     def get_best_match(self, file_path):
         matches = self.parse_codeowners_for_path(file_path)
-        if not matches:
-            # Check for file extension patterns if no direct matches are found
-            extension = file_path.split('.')[-1]
-            extension_pattern = f"*.{extension}"
-            matches = self.parse_codeowners_for_path(extension_pattern)
         
         if not matches:
             return []
+            
+        # Sort matches by score in descending order
+        matches.sort(key=lambda x: x['score'], reverse=True)
         
-        # Sort matches by pattern length in descending order
-        matches.sort(key=lambda x: x['length'], reverse=True)
+        # Log matches for debugging
+        logging.debug(f"Sorted matches for {file_path}:")
+        for match in matches:
+            logging.debug(f"Pattern: {match['pattern']}, Score: {match['score']}, Teams: {match['teams']}")
         
-        # Return the teams from the most specific match
-        best_match = matches[0]
-        return best_match['teams']
-        
+        # Return teams from highest scoring match
+        return matches[0]['teams']
+
     def isprivate(self):
         return self.get_info()["private"]
 
