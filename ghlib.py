@@ -243,12 +243,15 @@ class GHRepository:
             print("Pattern part:", pattern_part)
             print("File path:", file_path)
             print ("Pattern:", pattern)
-            
-            if pattern_part == '*':
-                file_path.pop(i)
-                continue
+
             if i >= len(file_path):
                 break
+            
+            if pattern_part == '*':
+                length = len(file_path) - len(pattern)
+                if length >= 0:
+                    file_path.pop(i)
+                continue
 
             position_multiplier = (i + 1)
 
