@@ -229,56 +229,45 @@ class GHRepository:
                 
         return None
 
+    def calculate_pattern_score(file_path, pattern, owners_list):
+        
+        file_path = file_path.strip('/').split('/')
+        highest_score = -float('inf') 
+        original_pattern = pattern
+        pattern = pattern.strip('/').split('/') 
+        score = 0
+        consecutive_matches = 0
+        full_score_line_list = []
+
+        for i, pattern_part in enumerate(pattern):
+        if pattern_part == '*':
+            file_path.pop(i)
+            continue
+        if i >= len(file_path):
+            break
+
+        position_multiplier = (i + 1)
+
+        if pattern_part == file_path[i]:
+            score += 40 * position_multiplier
+            consecutive_matches += 1
+
+        score += consecutive_matches * 50
+        
+        return original_pattern, score
+
     def parse_codeowners_for_path(self, file_path):
-        import fnmatch
-        import logging
         
-        def calculate_pattern_score(pattern, path):
-            
-            if ':' in path:
-                path = path.split(':')[0]
-                
-            pattern_parts = pattern.strip('/').split('/')
-            path_parts = path.strip('/').split('/')
-            highest_score = -float('inf') 
-
-
-            for patterns in pattern_parts:  
-                pattern_without_wildcards = [part for part in patterns if part != '*']
-            
-            score = len(patterns)
-            consecutive_matches = 0
-            
-            # Extra points for exact matches with position weighting
-            for i, pattern_part in enumerate(patterns):
-                if i >= len(path_parts):
-                    break
-                    
-                position_multiplier = (i + 1)  # Deeper matches worth more
-                
-                if pattern_part == path_parts[i]:
-                    score += 40 * position_multiplier  # Doubled exact match bonus
-                    consecutive_matches += 1
-
-                    
-            score += consecutive_matches * 50
-            highest_score = max(highest_score, score)
-                                    
-            return highest_score
-        
-        # Rest of the function remains the same
+        # Get CODEOWNERS content
         content = self.fetch_codeowners()
         if not content:
             return []
-                
-        all_matches = []
-        
-        for line in content.splitlines():
-            line = line.strip()
             
-            if not line or line.startswith('#'):
-                continue
-                    
+        all_scores_from_each_line = dict()
+        for line in content.splitlines():
+            
+            line = line.strip()
+
             parts = line.split()
             if len(parts) < 2:
                 continue
@@ -286,26 +275,17 @@ class GHRepository:
             pattern = parts[0]
             owners = parts[1:]
             
-            if fnmatch.fnmatch(file_path, pattern):
-                match_teams = []
-                for owner in owners:
-                    clean_team = owner.replace('@org/', '').replace('@nubank/', '')
-                    match_teams.append(clean_team)
-                        
-                score = calculate_pattern_score(pattern, file_path)
-                
-                all_matches.append({
-                    'pattern': pattern,
-                    'teams': match_teams,
-                    'score': score
-                })
-        
-        # Sort by score before returning
-        logging.debug(f"All matches for {file_path}")
-        for match in all_matches:
-            logging.debug(f"Pattern: {match['pattern']}, Score: {match['score']}, Teams: {match['teams']}")
+            pattern, full_score_linha = calculate_pattern_score(file_path, pattern, owners)
             
-        return all_matches
+            all_scores_from_each_line[pattern] = (full_score_linha, owners)
+            all_scores_from_each_line[pattern] = {
+                "score": full_score_linha,
+                "owners": owners
+            }
+
+        sorted_scores = sorted(all_scores_from_each_line.items(), key=lambda x: x[1]['score'], reverse=True)    
+        owners = sorted_scores[0][1]['owners']
+        return owners
 
     def isprivate(self):
         return self.get_info()["private"]
