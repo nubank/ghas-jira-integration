@@ -241,6 +241,7 @@ class GHRepository:
 
         for i, pattern_part in enumerate(pattern):
             if pattern_part == '*':
+                print("file_path:", file_path)
                 file_path.pop(i)
                 continue
             if i >= len(file_path):
