@@ -240,8 +240,11 @@ class GHRepository:
         full_score_line_list = []
 
         for i, pattern_part in enumerate(pattern):
+            print("Pattern part:", pattern_part)
+            print("File path:", file_path)
+            print ("Pattern:", pattern)
+            
             if pattern_part == '*':
-                print("file_path:", file_path)
                 file_path.pop(i)
                 continue
             if i >= len(file_path):
