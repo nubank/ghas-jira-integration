@@ -290,7 +290,7 @@ class GHRepository:
 
         sorted_scores = sorted(all_scores_from_each_line.items(), key=lambda x: x[1]['score'], reverse=True)    
         owners = sorted_scores[0][1]['owners']
-        return pattern, owners
+        return owners
 
     def isprivate(self):
         return self.get_info()["private"]
