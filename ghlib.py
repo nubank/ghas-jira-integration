@@ -233,29 +233,19 @@ class GHRepository:
         import fnmatch
         import logging
         
-        # Patterns to ignore
-        ignore_patterns = [
-            '/native/',
-            '/android/',
-            '/ios/',
-            '*.kt',
-            '*.java', 
-            '*.swift',
-            '*.h'
-        ]
-        
         # Get CODEOWNERS content
         content = self.fetch_codeowners()
         if not content:
             return []
             
-        teams = []
+        all_matches = []  # Store all matching patterns and their teams
+        
         # Parse each line of CODEOWNERS
         for line in content.splitlines():
             line = line.strip()
             
-            # Skip empty lines, comments and section headers
-            if not line or line.startswith('#') or line.startswith('##'):
+            # Skip empty lines and comments
+            if not line or line.startswith('#'):
                 continue
                 
             # Split line into pattern and owners
@@ -264,22 +254,51 @@ class GHRepository:
                 continue
                 
             pattern = parts[0]
-            
-            # Skip if pattern is in ignore list
-            if pattern in ignore_patterns:
-                logging.debug(f"Ignoring pattern: {pattern}")
-                continue
-                
             owners = parts[1:]
             
             # Check if file_path matches the pattern
             if fnmatch.fnmatch(file_path, pattern):
+                match_teams = []
                 # Clean team names by removing org prefixes
                 for owner in owners:
                     clean_team = owner.replace('@org/', '').replace('@nubank/', '')
-                    teams.append(clean_team)
-                    
-        return teams
+                    match_teams.append(clean_team)
+                
+                # Store pattern and its teams
+                all_matches.append({
+                    'pattern': pattern,
+                    'teams': match_teams
+                })
+        
+        return all_matches
+
+    def get_best_match(self, file_path):
+        matches = self.parse_codeowners_for_path(file_path)
+        if not matches:
+            # Check for file extension patterns if no direct matches are found
+            extension = file_path.split('.')[-1]
+            extension_pattern = f"*.{extension}"
+            matches = self.parse_codeowners_for_path(extension_pattern)
+        
+        if not matches:
+            return []
+        
+        # Determine the best match based on pattern specificity
+        best_match = None
+        best_match_length = 0
+        
+        for match in matches:
+            pattern = match['pattern']
+            pattern_length = len(pattern.strip('/').split('/'))
+            
+            if pattern_length > best_match_length:
+                best_match = match
+                best_match_length = pattern_length
+        
+        if best_match:
+            return best_match['teams']
+        
+        return []
 
     def isprivate(self):
         return self.get_info()["private"]
