@@ -241,43 +241,52 @@ class GHRepository:
             pattern_parts = pattern.strip('/').split('/')
             path_parts = path.strip('/').split('/')
             
-            # Base score from pattern length
-            score = len(pattern_parts) * 10
+            # Increased base score from pattern length
+            score = len(pattern_parts) * 20  # Increased multiplier
             
-            # Extra points for exact matches
+            # Track consecutive matches
+            consecutive_matches = 0
+            
+            # Extra points for exact matches with position weighting
             for i, pattern_part in enumerate(pattern_parts):
                 if i >= len(path_parts):
                     break
                     
-                if pattern_part == path_parts[i]:
-                    score += 20  # Exact match bonus
-                elif pattern_part == '*':
-                    score += 5   # Wildcard match bonus
-                elif pattern_part.startswith('*') or pattern_part.endswith('*'):
-                    score += 10  # Partial wildcard bonus
-                    
-            # Penalty for extension-only patterns
-            if pattern.startswith('*.'):
-                score -= 50
+                position_multiplier = (i + 1)  # Deeper matches worth more
                 
+                if pattern_part == path_parts[i]:
+                    score += 40 * position_multiplier  # Doubled exact match bonus
+                    consecutive_matches += 1
+                elif pattern_part == '*':
+                    score += 5 * position_multiplier  # Small bonus for wildcards
+                    consecutive_matches = 0
+                elif pattern_part.startswith('*') or pattern_part.endswith('*'):
+                    score += 10 * position_multiplier  # Moderate bonus for partial wildcards
+                    consecutive_matches = 0
+                    
+            # Bonus for consecutive matches
+            score += consecutive_matches * 30
+                    
+            # Increased penalty for extension-only patterns
+            if pattern.startswith('*.'):
+                score -= 100  # Doubled penalty
+                
+            logging.debug(f"Pattern: {pattern}, Score: {score}, Path: {path}")
             return score
         
-        # Get CODEOWNERS content
+        # Rest of the function remains the same
         content = self.fetch_codeowners()
         if not content:
             return []
-            
+                
         all_matches = []
         
-        # Parse each line of CODEOWNERS
         for line in content.splitlines():
             line = line.strip()
             
-            # Skip empty lines and comments
             if not line or line.startswith('#'):
                 continue
-                
-            # Split line into pattern and owners
+                    
             parts = line.split()
             if len(parts) < 2:
                 continue
@@ -285,42 +294,27 @@ class GHRepository:
             pattern = parts[0]
             owners = parts[1:]
             
-            # Check if file_path matches the pattern
             if fnmatch.fnmatch(file_path, pattern):
                 match_teams = []
-                # Clean team names
                 for owner in owners:
                     clean_team = owner.replace('@org/', '').replace('@nubank/', '')
                     match_teams.append(clean_team)
-                    
-                # Calculate pattern score
+                        
                 score = calculate_pattern_score(pattern, file_path)
                 
-                # Store pattern, teams and score
                 all_matches.append({
                     'pattern': pattern,
                     'teams': match_teams,
                     'score': score
                 })
         
-        return all_matches
-    
-    def get_best_match(self, file_path):
-        matches = self.parse_codeowners_for_path(file_path)
-        
-        if not matches:
-            return []
-            
-        # Sort matches by score in descending order
-        matches.sort(key=lambda x: x['score'], reverse=True)
-        
-        # Log matches for debugging
-        logging.debug(f"Sorted matches for {file_path}:")
-        for match in matches:
+        # Sort by score before returning
+        all_matches.sort(key=lambda x: x['score'], reverse=True)
+        logging.debug(f"All matches for {file_path}:")
+        for match in all_matches:
             logging.debug(f"Pattern: {match['pattern']}, Score: {match['score']}, Teams: {match['teams']}")
-        
-        # Return teams from highest scoring match
-        return matches[0]['teams']
+            
+        return all_matches
 
     def isprivate(self):
         return self.get_info()["private"]
