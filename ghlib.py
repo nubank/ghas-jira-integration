@@ -230,7 +230,7 @@ class GHRepository:
         return None
 
     def calculate_pattern_score(file_path, pattern, owners_list):
-        
+
         file_path = file_path.strip('/').split('/')
         highest_score = -float('inf') 
         original_pattern = pattern
@@ -240,19 +240,19 @@ class GHRepository:
         full_score_line_list = []
 
         for i, pattern_part in enumerate(pattern):
-        if pattern_part == '*':
-            file_path.pop(i)
-            continue
-        if i >= len(file_path):
-            break
+            if pattern_part == '*':
+                file_path.pop(i)
+                continue
+            if i >= len(file_path):
+                break
 
-        position_multiplier = (i + 1)
+            position_multiplier = (i + 1)
 
-        if pattern_part == file_path[i]:
-            score += 40 * position_multiplier
-            consecutive_matches += 1
+            if pattern_part == file_path[i]:
+                score += 40 * position_multiplier
+                consecutive_matches += 1
 
-        score += consecutive_matches * 50
+            score += consecutive_matches * 50
         
         return original_pattern, score
 
