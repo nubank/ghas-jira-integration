@@ -264,14 +264,15 @@ class GHRepository:
                     clean_team = owner.replace('@org/', '').replace('@nubank/', '')
                     match_teams.append(clean_team)
                 
-                # Store pattern and its teams
+                # Store pattern, its teams, and pattern length
                 all_matches.append({
                     'pattern': pattern,
-                    'teams': match_teams
+                    'teams': match_teams,
+                    'length': len(pattern.strip('/').split('/'))
                 })
         
         return all_matches
-
+    
     def get_best_match(self, file_path):
         matches = self.parse_codeowners_for_path(file_path)
         if not matches:
@@ -283,23 +284,13 @@ class GHRepository:
         if not matches:
             return []
         
-        # Determine the best match based on pattern specificity
-        best_match = None
-        best_match_length = 0
+        # Sort matches by pattern length in descending order
+        matches.sort(key=lambda x: x['length'], reverse=True)
         
-        for match in matches:
-            pattern = match['pattern']
-            pattern_length = len(pattern.strip('/').split('/'))
-            
-            if pattern_length > best_match_length:
-                best_match = match
-                best_match_length = pattern_length
+        # Return the teams from the most specific match
+        best_match = matches[0]
+        return best_match['teams']
         
-        if best_match:
-            return best_match['teams']
-        
-        return []
-
     def isprivate(self):
         return self.get_info()["private"]
 
