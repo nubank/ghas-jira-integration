@@ -275,7 +275,7 @@ class GHRepository:
             pattern = parts[0]
             owners = parts[1:]
             
-            pattern, full_score_linha = calculate_pattern_score(file_path, pattern, owners)
+            pattern, full_score_linha = self.calculate_pattern_score(file_path, pattern, owners)
             
             all_scores_from_each_line[pattern] = (full_score_linha, owners)
             all_scores_from_each_line[pattern] = {
