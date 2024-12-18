@@ -229,38 +229,46 @@ class GHRepository:
                 
         return None
 
-    def calculate_pattern_score(self, file_path, pattern, owners_list):
-
+    def calculate_pattern_score(file_path, pattern, owners_list):
         file_path = file_path.strip('/').split('/')
-        pattern = pattern.strip('/').split('/') 
-
-        highest_score = -float('inf')
-        
-        full_score_line_list = []
-
-        original_pattern = pattern
-
+        pattern = pattern.strip('/').split('/')
         score = 0
         consecutive_matches = 0
+        original_pattern = pattern
+
 
         for i, pattern_part in enumerate(pattern):
-            if i >= len(file_path):
-                break
-            
             if pattern_part == '*':
-                length = len(file_path) - len(pattern)
-                if length >= 0:
-                    file_path.pop(i)
+                score -= 10  # Penalidade para curinga simples
                 continue
+            if pattern_part == '**':
+                score -= 20  # Penalidade maior para curinga duplo
+                continue
+            if i >= len(file_path):
+                return pattern, -float('inf') # Penalidade máxima se o padrão for mais longo que o caminho do arquivo
 
             position_multiplier = (i + 1)
 
             if pattern_part == file_path[i]:
                 score += 40 * position_multiplier
                 consecutive_matches += 1
+            else:
+                # Penalidade se a parte do padrão não corresponder à parte do caminho do arquivo
+                score -= 20 * position_multiplier
+                consecutive_matches = 0 # Reset consecutive matches if there is a mismatch
 
-            score += consecutive_matches * 50
-        
+            score += consecutive_matches * 50  # Bônus para correspondências consecutivas
+
+        # Verificação adicional para padrões terminando com curinga (adicionado aqui)
+        last_pattern_part = pattern[-1]
+        if last_pattern_part in ('*', '**'):
+            if last_pattern_part == '*':
+                # Verifique se a última parte do caminho do arquivo contém a penúltima parte do padrão
+                if len(pattern) > 1 and len(file_path) > len(pattern) - 2 and pattern[-2] not in file_path[-1]:
+                    score -= 50  # Penalidade se a última parte do padrão não corresponder à parte do caminho do arquivo
+            # Lógica semelhante para '**' pode ser adicionada aqui se necessário
+
+
         return original_pattern, score
 
     def parse_codeowners_for_path(self, file_path):
@@ -282,7 +290,7 @@ class GHRepository:
             
             pattern, full_score_linha = self.calculate_pattern_score(file_path, pattern, owners)
             
-            all_scores_from_each_line[pattern] = (full_score_linha, owners)
+            pattern = tuple(pattern)
             all_scores_from_each_line[pattern] = {
                 "score": full_score_linha,
                 "owners": owners
