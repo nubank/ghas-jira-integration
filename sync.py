@@ -119,7 +119,7 @@ class Sync:
         pairs = {}
 
         # gather alerts
-        for a in itertools.chain(repo.get_secrets(), repo.get_alerts()):
+        for a in itertools.chain(repo.get_secrets(), repo.get_alerts(), repo.get_dependabot_alerts()):
             pairs[a.get_key()] = (a, [])
 
         # gather issues

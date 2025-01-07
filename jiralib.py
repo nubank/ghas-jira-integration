@@ -13,7 +13,8 @@ DELETE_EVENT = "jira:issue_deleted"
 tool_mapping = {
     "osv-scanner": "GitHub - Code Scanning - OSV-Scanner",
     "CodeQL": "GitHub - Code Scanning - CodeQL",
-    "dependency-check": "GitHub - Code Scanning - Dependency-Check"
+    "dependency-check": "GitHub - Code Scanning - Dependency-Check",
+    "dependabot": "GitHub - Dependabot",
 }
 
 severity_mapping = {
@@ -27,6 +28,7 @@ severity_mapping = {
 TITLE_PREFIXES = {
     "Alert": "[Code Scanning Alert]:",
     "Secret": "[Secret Scanning Alert]:",
+    "DependabotAlert": "[Dependabot Alert]:",
 }
 
 DESC_TEMPLATE = """

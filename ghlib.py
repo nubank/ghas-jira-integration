@@ -334,6 +334,11 @@ class GHRepository:
                 # propagate everything else
                 raise         
 
+    def get_dependabot_alerts(self, state=None):
+        """Fetch Dependabot alerts similar to how we fetch code scanning alerts"""
+        for a in self.alerts_helper("dependabot", state):
+            yield DependabotAlert(self, a)
+
 class AlertBase:
     def __init__(self, github_repo, json):
         self.github_repo = github_repo
@@ -523,6 +528,45 @@ class Secret(AlertBase):
                 repo_id=self.github_repo.repo_id,
                 alert_num=self.number(),
             ),
+            data=data,
+            headers=self.gh.default_headers(),
+            timeout=util.REQUEST_TIMEOUT,
+        )
+        resp.raise_for_status()
+
+class DependabotAlert(AlertBase):
+    def __init__(self, github_repo, json):
+        AlertBase.__init__(self, github_repo, json)
+
+    def can_transition(self):
+        return True
+
+    def long_desc(self):
+        return f"Dependabot Alert: {self.json.get('security_advisory', {}).get('summary', '')}"
+
+    def short_desc(self):
+        return f"Dependency: {self.json.get('dependency', {}).get('package', {}).get('name', '')}"
+
+    def get_key(self):
+        return util.make_key(
+            self.github_repo.repo_id + "/dependabot/" + str(self.number())
+        )
+
+    def get_severity(self):
+        return self.json.get("security_advisory", {}).get("severity", "")
+
+    def get_state(self):
+        return self.json.get("state") == "open"
+
+    def get_location(self):
+        return self.json.get("dependency", {}).get("manifest_path", "")
+
+    def do_adjust_state(self, target_state):
+        state = "open" if target_state else "dismissed"
+        data = json.dumps({"state": state})
+        
+        resp = requests.patch(
+            f"{self.gh.url}/repos/{self.github_repo.repo_id}/dependabot/alerts/{self.number()}",
             data=data,
             headers=self.gh.default_headers(),
             timeout=util.REQUEST_TIMEOUT,
