@@ -572,3 +572,10 @@ class DependabotAlert(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
+
+    def location(self):
+        """Get the location of the vulnerable dependency"""
+        manifest_path = self.json.get("dependency", {}).get("manifest_path", "")
+        if not manifest_path:
+            return "No manifest path available"
+        return manifest_path
