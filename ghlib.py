@@ -574,15 +574,17 @@ class DependabotAlert(AlertBase):
         resp.raise_for_status()
 
     def location(self):
-        """Get the location of the vulnerable dependency"""
         manifest_path = self.json.get("dependency", {}).get("manifest_path", "")
         if not manifest_path:
-            return "No manifest path available"
+            return
         return manifest_path
 
     def get_package_info(self):
-        return {
-            'name': self.json.get('security_vulnerability', {}).get('package', {}).get('name'),
-            'current_version': self.json.get('security_vulnerability', {}).get('vulnerable_version_range'),
-            'fixed_version': self.json.get('security_vulnerability', {}).get('first_patched_version', {}).get('identifier')
+        package_info = {
+            'Package': self.json.get("security_vulnerability", {}).get("package", {}).get("ecosystem").get("name"),
+            'Affected versions': self.json.get("security_vulnerability", {}).get("vulnerable_version_range"),
+            'Patched version': self.json.get("security_vulnerability", {}).get("first_patched_version", {}).get("identifier")
         }
+        if not package_info:
+            return 
+        return package_info

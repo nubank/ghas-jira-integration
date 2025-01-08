@@ -237,9 +237,7 @@ class JiraProject:
             description = DEPENDABOT_TEMPLATE.format(
                 long_desc=long_desc,
                 full_description=full_description,
-                package_name=package_info.get('name', 'Unknown'),
-                current_version=package_info.get('current_version', 'Unknown'),
-                fixed_version=package_info.get('fixed_version', 'Unknown'),
+                package_name=package_info,
                 location=location,
                 responsible_teams=responsible_teams,
                 repo_id=repo_id,
