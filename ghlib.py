@@ -586,9 +586,9 @@ class DependabotAlert(AlertBase):
         current_version = security_vuln.get('vulnerable_version_range', 'Unknown')
         fixed_version = (security_vuln.get('first_patched_version') or {}).get('identifier', 'Unknown')
         
-        formatted_info = f"""
+        package_info = f"""
             Name: {name} ({ecosystem})
             Current Version: {current_version}
             Fixed Version: {fixed_version}"""
         
-        return formatted_info.strip()
+        return package_info.strip()

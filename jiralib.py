@@ -51,7 +51,7 @@ ALERT_KEY={alert_key}
 
 DEPENDABOT_TEMPLATE = """
 {long_desc}
-Package: {formatted_info}
+Package Information:{package_info}
 Manifest Path: {location}
 Responsible Teams: {responsible_teams}
 Security Advisory:
@@ -233,7 +233,7 @@ class JiraProject:
             description = DEPENDABOT_TEMPLATE.format(
                 long_desc=long_desc,
                 full_description=full_description,
-                formatted_info=formatted_info,
+                package_info=package_info or "No package information available",
                 location=location,
                 responsible_teams=responsible_teams,
                 repo_id=repo_id,
