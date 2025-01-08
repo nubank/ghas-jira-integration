@@ -51,7 +51,7 @@ ALERT_KEY={alert_key}
 
 DEPENDABOT_TEMPLATE = """
 {long_desc}
-Package: {package_name}
+Package: {formatted_info}
 Manifest Path: {location}
 Responsible Teams: {responsible_teams}
 Security Advisory:
@@ -229,13 +229,11 @@ class JiraProject:
 
         logger.debug(f"Creating issue for alert_type: {alert_type}")
 
-        package_info = package_info or {}
-
         if alert_type == "DependabotAlert":
             description = DEPENDABOT_TEMPLATE.format(
                 long_desc=long_desc,
                 full_description=full_description,
-                package_name=package_info,
+                package_name=formatted_info,
                 location=location,
                 responsible_teams=responsible_teams,
                 repo_id=repo_id,

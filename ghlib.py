@@ -581,9 +581,14 @@ class DependabotAlert(AlertBase):
         security_vuln = self.json.get("security_vulnerability", {})
         package = security_vuln.get("package", {})
         
-        return {
-            'name': package.get('name', 'Unknown'),
-            'ecosystem': package.get('ecosystem', 'Unknown'),
-            'current_version': security_vuln.get('vulnerable_version_range', 'Unknown'),
-            'fixed_version': (security_vuln.get('first_patched_version') or {}).get('identifier', 'Unknown')
-        }
+        name = package.get('name', 'Unknown')
+        ecosystem = package.get('ecosystem', 'Unknown')
+        current_version = security_vuln.get('vulnerable_version_range', 'Unknown')
+        fixed_version = (security_vuln.get('first_patched_version') or {}).get('identifier', 'Unknown')
+        
+        formatted_info = f"""
+            Name: {name} ({ecosystem})
+            Current Version: {current_version}
+            Fixed Version: {fixed_version}"""
+        
+        return formatted_info.strip()
