@@ -633,7 +633,6 @@ class DependabotAlert(AlertBase):
     def get_full_description(self):
         security_advisory = self.json.get("security_advisory", {})
         description = security_advisory.get("description", "").strip()
-        summary = security_advisory.get("summary", "").strip()
         
         if not description:
             return "No description available."
@@ -641,10 +640,6 @@ class DependabotAlert(AlertBase):
         # If description doesn't have sections (###), format as simple description
         if '###' not in description:
             formatted_desc = []
-            
-            # Always include summary if available and different from description
-            if summary and summary != description:
-                formatted_desc.append(f"Summary\n{summary}")
                 
             # Add description under Impact section if it's a simple text
             formatted_desc.append(f"Impact\n{description}")
