@@ -408,8 +408,8 @@ class AlertBase:
             security_severity_level = self.json.get("severity", "")
         return security_severity_level
 
-    def get_full_description(self):
-        return None
+#    def get_full_description(self):
+#        return
 
     def get_identification_date(self):
         identification_date = self.json.get("created_at", "")
