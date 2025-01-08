@@ -631,23 +631,46 @@ class DependabotAlert(AlertBase):
         return package_info.strip()
 
     def get_full_description(self):
-        full_description = self.json.get("security_advisory", {}).get("description", "")
-        if not full_description:
+        security_advisory = self.json.get("security_advisory", {})
+        description = security_advisory.get("description", "").strip()
+        summary = security_advisory.get("summary", "").strip()
+        
+        if not description:
             return "No description available."
-    
-        # Clean up the description
+
+        # If description doesn't have sections (###), format as simple description
+        if '###' not in description:
+            formatted_desc = []
+            
+            # Always include summary if available and different from description
+            if summary and summary != description:
+                formatted_desc.append(f"Summary\n{summary}")
+                
+            # Add description under Impact section if it's a simple text
+            formatted_desc.append(f"Impact\n{description}")
+            
+            # Add CVE/GHSA reference if available
+            references = []
+            if security_advisory.get("cve_id"):
+                references.append(f"https://nvd.nist.gov/vuln/detail/{security_advisory['cve_id']}")
+            if security_advisory.get("ghsa_id"):
+                references.append(f"https://github.com/advisories/{security_advisory['ghsa_id']}")
+            
+            if references:
+                formatted_desc.append("References\n" + "\n".join(references))
+                
+            return "\n\n".join(formatted_desc)
+        
+        # Existing section-based formatting logic
         sections = {}
         current_section = None
         current_content = []
         
-        for line in full_description.split('\n'):
+        for line in description.split('\n'):
             line = line.strip()
-            
-            # Skip empty lines
             if not line:
                 continue
-                
-            # Check if this is a section header
+            
             if line.startswith('###'):
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
@@ -656,11 +679,9 @@ class DependabotAlert(AlertBase):
             else:
                 current_content.append(line)
         
-        # Add the last section
         if current_section and current_content:
             sections[current_section] = '\n'.join(current_content).strip()
         
-        # Format the final output
         formatted_desc = []
         for section in ['Impact', 'Patches', 'Workarounds', 'References']:
             if section in sections:
