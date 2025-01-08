@@ -399,8 +399,16 @@ class AlertBase:
         file_path = self.get_location()
         if not file_path:
             return []
-        responsible_teams = self.github_repo.parse_codeowners_for_path(file_path)
-        return responsible_teams
+            
+        teams = self.github_repo.parse_codeowners_for_path(file_path)
+        
+        # Clean team names by removing organization prefix
+        cleaned_teams = [
+            team.replace('@nubank/', '') 
+            for team in teams
+        ]
+        
+        return cleaned_teams
     
     def get_severity(self):
         security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")

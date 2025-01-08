@@ -56,12 +56,12 @@ DEPENDABOT_TEMPLATE = """
 
 {full_description}
 
-*Package Information:*
+Package Information:
 {package_info}
 
-*Manifest Path:* {location}
+Path: {location}
 
-*Responsible Teams:* {responsible_teams}
+Responsible Teams: {responsible_teams}
 This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
 ----
