@@ -54,12 +54,14 @@ ALERT_KEY={alert_key}
 DEPENDABOT_TEMPLATE = """
 {long_desc}
 
-Package Information:
+*Package Information:*
 {package_info}
 
-Path: {location}
+*Path:*
+{location}
 
-Responsible Teams: {responsible_teams}
+*Responsible Teams:*
+{responsible_teams}
 This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
 {full_description}

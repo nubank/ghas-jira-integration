@@ -645,7 +645,7 @@ class DependabotAlert(AlertBase):
         
         if not description:
             return "No description available."
-
+    
         # If description doesn't have sections (###), format as simple description
         if '###' not in description:
             formatted_desc = []
@@ -672,24 +672,32 @@ class DependabotAlert(AlertBase):
         
         for line in description.split('\n'):
             line = line.strip()
+            # Skip empty lines
             if not line:
                 continue
             
+            # Clean up numbered list formatting
+            if line.startswith(('1.', 'a.')):
+                continue
+                
             if line.startswith('###'):
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
                 current_section = line.replace('###', '').strip()
                 current_content = []
             else:
-                current_content.append(line)
+                # Skip if line only contains numbers or letters with dots
+                if not line.replace('.', '').strip().isalnum():
+                    current_content.append(line)
         
         if current_section and current_content:
             sections[current_section] = '\n'.join(current_content).strip()
         
         formatted_desc = []
-        for section in ['*Impact*', '*Patches*', '*Workarounds*', '*References*']:
-            if section in sections:
-                formatted_desc.append(f"{section}\n{sections[section]}")
+        for section in ['Impact', 'Patches', 'Workarounds', 'Recommendation', 'References']:
+            if section.lower() in [s.lower() for s in sections.keys()]:
+                section_content = sections.get(section) or sections.get(section.lower())
+                formatted_desc.append(f"*{section}*\n{section_content}")
         
         return '\n\n'.join(formatted_desc)
     
