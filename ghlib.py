@@ -408,7 +408,8 @@ class AlertBase:
             for team in teams
         ]
         
-        return cleaned_teams
+        # Join team names with comma and space
+        return ", ".join(cleaned_teams) if cleaned_teams else ""
     
     def get_severity(self):
         security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")
