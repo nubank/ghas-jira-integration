@@ -34,7 +34,6 @@ TITLE_PREFIXES = {
 CODE_SCANNING_TEMPLATE = """
 {long_desc}
 
-*Description:*
 {full_description}
 
 *Location:* {location}
@@ -63,7 +62,6 @@ DEPENDABOT_TEMPLATE = """
 *Responsible Teams:* {responsible_teams}
 This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
-*Description:*
 {full_description}
 
 ----
