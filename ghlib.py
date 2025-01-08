@@ -475,34 +475,7 @@ class Alert(AlertBase):
         return None
 
     def get_full_description(self):
-        rule = self.json.get("rule", {})
-        
-        # Get description sections
-        full_desc = rule.get("full_description", "").strip()
-        help_text = rule.get("help", "")
-        
-        if not help_text:
-            return full_desc
-            
-        # Process help text sections
-        sections = []
-        current_section = []
-        
-        for line in help_text.split('\n'):
-            line = line.strip()
-            if not line:
-                continue
-            if line.startswith('#'):
-                if current_section:
-                    sections.append('\n'.join(current_section))
-                    current_section = []
-                continue
-            current_section.append(line)
-            
-        if current_section:
-            sections.append('\n'.join(current_section))
-            
-        return f"{full_desc}\n\n{'\n\n'.join(sections)}"
+        return None
 
     def get_cwe(self):
         tags = self.json.get("rule", {}).get("tags", [])
