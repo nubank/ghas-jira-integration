@@ -443,6 +443,9 @@ class AlertBase:
             return
         return cwe_list
 
+    def get_package_info(self):
+        return None
+
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
