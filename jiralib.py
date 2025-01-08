@@ -233,7 +233,7 @@ class JiraProject:
             description = DEPENDABOT_TEMPLATE.format(
                 long_desc=long_desc,
                 full_description=full_description,
-                package_name=formatted_info,
+                formatted_info=formatted_info,
                 location=location,
                 responsible_teams=responsible_teams,
                 repo_id=repo_id,
