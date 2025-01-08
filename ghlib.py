@@ -715,3 +715,5 @@ class DependabotAlert(AlertBase):
                 
         return cwe_list
   
+    def get_tool_name(self):
+        return "dependabot"
