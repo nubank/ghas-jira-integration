@@ -31,17 +31,40 @@ TITLE_PREFIXES = {
     "DependabotAlert": "[Dependabot Alert]:",
 }
 
-DESC_TEMPLATE = """
+CODE_SCANNING_TEMPLATE = """
 {long_desc}
 
 {full_description}
 
-{location}
-
-{responsible_teams}
+Location: {location}
+Responsible Teams: {responsible_teams}
+CWE: {cwe_list}
+Language: {language}
 
 ----
-This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
+This issue was automatically generated from a GitHub Code Scanning alert.
+DO NOT MODIFY DESCRIPTION BELOW LINE.
+REPOSITORY_NAME={repo_id}
+ALERT_TYPE={alert_type}
+ALERT_NUMBER={alert_num}
+REPOSITORY_KEY={repo_key}
+ALERT_KEY={alert_key}
+"""
+
+DEPENDABOT_TEMPLATE = """
+{long_desc}
+
+Vulnerable Package: {package_name}
+Current Version: {current_version}
+Fixed Version: {fixed_version}
+Manifest Path: {location}
+Responsible Teams: {responsible_teams}
+
+Security Advisory:
+{full_description}
+
+----
+This issue was automatically generated from a GitHub Dependabot alert.
 DO NOT MODIFY DESCRIPTION BELOW LINE.
 REPOSITORY_NAME={repo_id}
 ALERT_TYPE={alert_type}
@@ -202,12 +225,45 @@ class JiraProject:
         cwe_list,
         location,
         responsible_teams,
+        package_info=None,
     ):
         if alert_type in ["Secret"]:
             return None
 
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
+
+        if alert_type == "Dependabot":
+            description = DEPENDABOT_TEMPLATE.format(
+                long_desc=long_desc,
+                full_description=full_description,
+                package_name=package_info.get('name', 'Unknown'),
+                current_version=package_info.get('current_version', 'Unknown'),
+                fixed_version=package_info.get('fixed_version', 'Unknown'),
+                location=location,
+                responsible_teams=responsible_teams,
+                repo_id=repo_id,
+                alert_type=alert_type,
+                alert_num=alert_num,
+                repo_key=repo_key,
+                alert_key=alert_key,
+            )
+        
+        else: # Code Scanning
+            description = CODE_SCANNING_TEMPLATE.format(
+                long_desc=long_desc,
+                full_description=full_description,
+                location=location,
+                responsible_teams=responsible_teams,
+                cwe_list=cwe_list,
+                language=language,
+                repo_id=repo_id,
+                alert_type=alert_type,
+                alert_num=alert_num,
+                repo_key=repo_key,
+                alert_key=alert_key,
+            )
+
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{long_desc}".format(
@@ -238,8 +294,8 @@ class JiraProject:
             customfield_21734=short_desc,
             customfield_10611=identification_date,
             customfield_15569={'value': 'Nubank'},
-            customfield_16749=language,
-            customfield_17255=cwe_list,
+            customfield_16749=language if alert_type != "Dependabot" else None,
+            customfield_17255=cwe_list  if alert_type != "Dependabot" else None,
             customfield_10548={'value': '2021:A04 - Insecure Design'},
             customfield_18385=['MobSec'],
         )

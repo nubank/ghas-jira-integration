@@ -579,3 +579,10 @@ class DependabotAlert(AlertBase):
         if not manifest_path:
             return "No manifest path available"
         return manifest_path
+
+    def get_package_info(self):
+        return {
+            'name': self.json.get('security_vulnerability', {}).get('package', {}).get('name'),
+            'current_version': self.json.get('security_vulnerability', {}).get('vulnerable_version_range'),
+            'fixed_version': self.json.get('security_vulnerability', {}).get('first_patched_version', {}).get('identifier')
+        }
