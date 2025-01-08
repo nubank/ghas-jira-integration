@@ -428,15 +428,7 @@ class AlertBase:
         return []
 
     def get_cwe(self):
-        tags = self.json.get("rule", {}).get("tags", [])
-        cwe_list = []
-        for tag in tags:
-            if tag.startswith("external/cwe/"):
-                cwe = tag.replace("external/cwe/", "")
-                cwe_list.append(cwe)
-        if not cwe_list:
-            return
-        return cwe_list
+        return None
 
     def get_package_info(self):
         return None
@@ -483,12 +475,45 @@ class Alert(AlertBase):
         return None
 
     def get_full_description(self):
-        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "") 
-#        full_description = json.dumps(self.json, indent=4)
-#        full_description = self.json.get("rule", {},).get("full_description", "")
-        if not full_description:
-            full_description = "Secret found on code. No more description available."
-        return full_description   
+        rule = self.json.get("rule", {})
+        
+        # Get description sections
+        full_desc = rule.get("full_description", "").strip()
+        help_text = rule.get("help", "")
+        
+        if not help_text:
+            return full_desc
+            
+        # Process help text sections
+        sections = []
+        current_section = []
+        
+        for line in help_text.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith('#'):
+                if current_section:
+                    sections.append('\n'.join(current_section))
+                    current_section = []
+                continue
+            current_section.append(line)
+            
+        if current_section:
+            sections.append('\n'.join(current_section))
+            
+        return f"{full_desc}\n\n{'\n\n'.join(sections)}"
+
+    def get_cwe(self):
+        tags = self.json.get("rule", {}).get("tags", [])
+        cwe_list = []
+        for tag in tags:
+            if tag.startswith("external/cwe/"):
+                cwe = tag.replace("external/cwe/", "")
+                cwe_list.append(cwe)
+        if not cwe_list:
+            return
+        return cwe_list
 
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
@@ -536,6 +561,9 @@ class Secret(AlertBase):
         return None        
 
     def get_full_description(self):
+        return None
+    
+    def get_cwe(self):
         return None
 
 class DependabotAlert(AlertBase):
@@ -639,3 +667,18 @@ class DependabotAlert(AlertBase):
                 formatted_desc.append(f"{section}\n{sections[section]}")
         
         return '\n\n'.join(formatted_desc)
+    
+    def get_cwe(self):
+        """Get CWE information from Dependabot security advisory"""
+        cwes = self.json.get("security_advisory", {}).get("cwes", [])
+        if not cwes:
+            return None
+            
+        cwe_list = []
+        for cwe in cwes:
+            cwe_id = cwe.get("cwe_id", "")
+            if cwe_id:
+                cwe_list.append(cwe_id)
+                
+        return cwe_list
+  

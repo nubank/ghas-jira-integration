@@ -33,11 +33,14 @@ TITLE_PREFIXES = {
 
 CODE_SCANNING_TEMPLATE = """
 {long_desc}
+
+*Description:*
 {full_description}
-Location: {location}
-Responsible Teams: {responsible_teams}
-CWE: {cwe_list}
-Language: {language}
+
+*Location:* {location}
+
+*Responsible Teams:* {responsible_teams}
+This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
 ----
 This issue was automatically generated from a GitHub Code Scanning alert.
@@ -52,13 +55,15 @@ ALERT_KEY={alert_key}
 DEPENDABOT_TEMPLATE = """
 {long_desc}
 
-Package Information:
+*Package Information:*
 {package_info}
 
-Manifest Path: {location}
-Responsible Teams: {responsible_teams}
+*Manifest Path:* {location}
 
-Description:
+*Responsible Teams:* {responsible_teams}
+This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
+
+*Description:*
 {full_description}
 
 ----
@@ -282,7 +287,7 @@ class JiraProject:
             customfield_10611=identification_date,
             customfield_15569={'value': 'Nubank'},
             customfield_16749=language if alert_type != "Dependabot" else None,
-            customfield_17255=cwe_list  if alert_type != "Dependabot" else None,
+            customfield_17255=cwe_list,
             customfield_10548={'value': '2021:A04 - Insecure Design'},
             customfield_18385=['MobSec'],
         )
