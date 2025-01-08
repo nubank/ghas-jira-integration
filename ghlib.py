@@ -646,48 +646,58 @@ class DependabotAlert(AlertBase):
         if not description:
             return "No description available."
     
-        # Handle ## section markers in JSON
-        if '##' in description:
-            sections = {}
-            
-            # Split by ## markers and process each section
-            for section in description.split('##'):
-                section = section.strip()
-                if not section:
-                    continue
-                    
-                # Extract section name and content
-                lines = section.split('\n')
-                section_name = lines[0].strip()
-                section_content = '\n'.join(lines[1:]).strip()
-                
-                # Clean up the content
-                section_content = section_content.replace('1.', '').replace('a.', '').strip()
-                sections[section_name] = section_content
-                
-            # Format sections in desired order
+        # If description doesn't have sections (###), format as simple description
+        if '###' not in description:
             formatted_desc = []
-            for section in ['Impact', 'Patches', 'Workarounds', 'Recommendation', 'References']:
-                if section.lower() in [s.lower() for s in sections.keys()]:
-                    section_content = sections.get(section) or sections.get(section.lower())
-                    if section_content:
-                        formatted_desc.append(f"*{section}*\n{section_content.strip()}")
+                
+            # Add description under Impact section if it's a simple text
+            formatted_desc.append(f"*Impact*\n{description}")
             
-            return '\n\n'.join(formatted_desc)
+            # Add CVE/GHSA reference if available
+            references = []
+            if security_advisory.get("cve_id"):
+                references.append(f"https://nvd.nist.gov/vuln/detail/{security_advisory['cve_id']}")
+            if security_advisory.get("ghsa_id"):
+                references.append(f"https://github.com/advisories/{security_advisory['ghsa_id']}")
+            
+            if references:
+                formatted_desc.append("*References*\n" + "\n".join(references))
+                
+            return "\n\n".join(formatted_desc)
         
-        # Handle simple description without sections
+        # Existing section-based formatting logic
+        sections = {}
+        current_section = None
+        current_content = []
+        
+        for line in description.split('\n'):
+            line = line.strip()
+            # Skip empty lines
+            if not line:
+                continue
+            
+            # Clean up numbered list formatting
+            if line.startswith(('1.', 'a.')):
+                continue
+                
+            if line.startswith('###'):
+                if current_section and current_content:
+                    sections[current_section] = '\n'.join(current_content).strip()
+                current_section = line.replace('###', '').strip()
+                current_content = []
+            else:
+                # Skip if line only contains numbers or letters with dots
+                if not line.replace('.', '').strip().isalnum():
+                    current_content.append(line)
+        
+        if current_section and current_content:
+            sections[current_section] = '\n'.join(current_content).strip()
+        
         formatted_desc = []
-        formatted_desc.append(f"*Impact*\n{description}")
-        
-        # Add references
-        references = []
-        if security_advisory.get("cve_id"):
-            references.append(f"https://nvd.nist.gov/vuln/detail/{security_advisory['cve_id']}")
-        if security_advisory.get("ghsa_id"):
-            references.append(f"https://github.com/advisories/{security_advisory['ghsa_id']}")
-        
-        if references:
-            formatted_desc.append("*References*\n" + "\n".join(references))
+        for section in ['*Impact*', '*Patches*', '*Workarounds*', '*Recommendation*', '*References*']:
+            if section.lower() in [s.lower() for s in sections.keys()]:
+                section_content = sections.get(section) or sections.get(section.lower())
+                formatted_desc.append(f"*{section}*\n{section_content}")
         
         return '\n\n'.join(formatted_desc)
     
