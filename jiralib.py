@@ -33,9 +33,7 @@ TITLE_PREFIXES = {
 
 CODE_SCANNING_TEMPLATE = """
 {long_desc}
-
 {full_description}
-
 Location: {location}
 Responsible Teams: {responsible_teams}
 CWE: {cwe_list}
@@ -53,13 +51,11 @@ ALERT_KEY={alert_key}
 
 DEPENDABOT_TEMPLATE = """
 {long_desc}
-
 Vulnerable Package: {package_name}
 Current Version: {current_version}
 Fixed Version: {fixed_version}
 Manifest Path: {location}
 Responsible Teams: {responsible_teams}
-
 Security Advisory:
 {full_description}
 
@@ -233,7 +229,9 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
 
-        if alert_type == "Dependabot":
+        logger.debug(f"Creating issue for alert_type: {alert_type}")
+
+        if alert_type == "dependabot" or tool_name == "dependabot":
             description = DEPENDABOT_TEMPLATE.format(
                 long_desc=long_desc,
                 full_description=full_description,
