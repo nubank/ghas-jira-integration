@@ -54,8 +54,6 @@ ALERT_KEY={alert_key}
 DEPENDABOT_TEMPLATE = """
 {long_desc}
 
-{full_description}
-
 Package Information:
 {package_info}
 
@@ -63,6 +61,8 @@ Path: {location}
 
 Responsible Teams: {responsible_teams}
 This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
+
+{full_description}
 
 ----
 This issue was automatically generated from a GitHub Dependabot alert.

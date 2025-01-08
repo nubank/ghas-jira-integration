@@ -651,7 +651,7 @@ class DependabotAlert(AlertBase):
             formatted_desc = []
                 
             # Add description under Impact section if it's a simple text
-            formatted_desc.append(f"Impact\n{description}")
+            formatted_desc.append(f"*Impact*\n{description}")
             
             # Add CVE/GHSA reference if available
             references = []
@@ -661,7 +661,7 @@ class DependabotAlert(AlertBase):
                 references.append(f"https://github.com/advisories/{security_advisory['ghsa_id']}")
             
             if references:
-                formatted_desc.append("References\n" + "\n".join(references))
+                formatted_desc.append("*References*\n" + "\n".join(references))
                 
             return "\n\n".join(formatted_desc)
         
@@ -687,7 +687,7 @@ class DependabotAlert(AlertBase):
             sections[current_section] = '\n'.join(current_content).strip()
         
         formatted_desc = []
-        for section in ['Impact', 'Patches', 'Workarounds', 'References']:
+        for section in ['*Impact*', '*Patches*', '*Workarounds*', '*References*']:
             if section in sections:
                 formatted_desc.append(f"{section}\n{sections[section]}")
         
