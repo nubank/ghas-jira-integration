@@ -51,10 +51,14 @@ ALERT_KEY={alert_key}
 
 DEPENDABOT_TEMPLATE = """
 {long_desc}
-Package Information:{package_info}
+
+Package Information:
+{package_info}
+
 Manifest Path: {location}
 Responsible Teams: {responsible_teams}
-Security Advisory:
+
+Description:
 {full_description}
 
 ----

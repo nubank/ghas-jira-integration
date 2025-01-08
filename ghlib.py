@@ -409,12 +409,7 @@ class AlertBase:
         return security_severity_level
 
     def get_full_description(self):
-        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "") 
-#        full_description = json.dumps(self.json, indent=4)
-#        full_description = self.json.get("rule", {},).get("full_description", "")
-        if not full_description:
-            full_description = "Secret found on code. No more description available."
-        return full_description   
+        return None
 
     def get_identification_date(self):
         identification_date = self.json.get("created_at", "")
@@ -487,6 +482,14 @@ class Alert(AlertBase):
     def get_package_info(self):
         return None
 
+    def get_full_description(self):
+        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "") 
+#        full_description = json.dumps(self.json, indent=4)
+#        full_description = self.json.get("rule", {},).get("full_description", "")
+        if not full_description:
+            full_description = "Secret found on code. No more description available."
+        return full_description   
+
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
@@ -531,6 +534,9 @@ class Secret(AlertBase):
 
     def get_package_info(self):
         return None        
+
+    def get_full_description(self):
+        return None
 
 class DependabotAlert(AlertBase):
     def __init__(self, github_repo, json):
@@ -592,3 +598,9 @@ class DependabotAlert(AlertBase):
             Fixed Version: {fixed_version}"""
         
         return package_info.strip()
+
+    def get_full_description(self):
+        full_description = self.json.get("security_advisory", {}).get("description", "")
+        if not full_description:
+            full_description = "No description available."
+        return full_description
