@@ -484,17 +484,9 @@ class Alert(AlertBase):
     def location(self):
         return ''
 
-#    def get_full_description(self):
-#        print(self.json) 
-#        rule = self.json.get("rule", {})
-#        full_description = rule.get("full_description", "")
-#        
-#        if not full_description:
-#            print("Rule key present:", "rule" in self.json) 
-#            print("Full description key present:", "full_description" in rule)  
-#            return "No description available."
-#        return full_description
-    
+    def get_package_info(self):
+        return None
+
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
@@ -536,6 +528,9 @@ class Secret(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
+
+    def get_package_info(self):
+        return None        
 
 class DependabotAlert(AlertBase):
     def __init__(self, github_repo, json):
@@ -583,11 +578,12 @@ class DependabotAlert(AlertBase):
         return manifest_path
 
     def get_package_info(self):
-        package_info = {
-            'Package': self.json.get("security_vulnerability", {}).get("package", {}).get("ecosystem").get("name"),
-            'Affected versions': self.json.get("security_vulnerability", {}).get("vulnerable_version_range"),
-            'Patched version': self.json.get("security_vulnerability", {}).get("first_patched_version", {}).get("identifier")
+        security_vuln = self.json.get("security_vulnerability", {})
+        package = security_vuln.get("package", {})
+        
+        return {
+            'name': package.get('name', 'Unknown'),
+            'ecosystem': package.get('ecosystem', 'Unknown'),
+            'current_version': security_vuln.get('vulnerable_version_range', 'Unknown'),
+            'fixed_version': (security_vuln.get('first_patched_version') or {}).get('identifier', 'Unknown')
         }
-        if not package_info:
-            return 
-        return package_info
