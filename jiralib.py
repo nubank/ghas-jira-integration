@@ -281,8 +281,8 @@ class JiraProject:
             customfield_21734=short_desc,
             customfield_10611=identification_date,
             customfield_15569={'value': 'Nubank'},
-            customfield_16749=language if alert_type != "DependabotAlert" else None,
-            customfield_17255=cwe_list  if alert_type != "DependabotAlert" else None,
+            customfield_16749=language if alert_type != "Dependabot" else None,
+            customfield_17255=cwe_list  if alert_type != "Dependabot" else None,
             customfield_10548={'value': '2021:A04 - Insecure Design'},
             customfield_18385=['MobSec'],
         )

@@ -605,5 +605,37 @@ class DependabotAlert(AlertBase):
     def get_full_description(self):
         full_description = self.json.get("security_advisory", {}).get("description", "")
         if not full_description:
-            full_description = "No description available."
-        return full_description
+            return "No description available."
+    
+        # Clean up the description
+        sections = {}
+        current_section = None
+        current_content = []
+        
+        for line in full_description.split('\n'):
+            line = line.strip()
+            
+            # Skip empty lines
+            if not line:
+                continue
+                
+            # Check if this is a section header
+            if line.startswith('###'):
+                if current_section and current_content:
+                    sections[current_section] = '\n'.join(current_content).strip()
+                current_section = line.replace('###', '').strip()
+                current_content = []
+            else:
+                current_content.append(line)
+        
+        # Add the last section
+        if current_section and current_content:
+            sections[current_section] = '\n'.join(current_content).strip()
+        
+        # Format the final output
+        formatted_desc = []
+        for section in ['Impact', 'Patches', 'Workarounds', 'References']:
+            if section in sections:
+                formatted_desc.append(f"{section}\n{sections[section]}")
+        
+        return '\n\n'.join(formatted_desc)
