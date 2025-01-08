@@ -670,6 +670,41 @@ class DependabotAlert(AlertBase):
         current_section = None
         current_content = []
         
+        import re
+        
+        for line in description.split('\n'):
+            line = line.strip()
+            # Skip empty lines
+            if not line:
+                continue
+                
+            if line.startswith('###'):
+                if current_section and current_content:
+                    sections[current_section] = '\n'.join(current_content).strip()
+                current_section = line.replace('###', '').strip()
+                current_content = []
+            else:
+                # Clean up line content
+                cleaned_line = re.sub(r'^[\d\s\.]+|^[a-z]\.\s+', '', line).strip()
+                if cleaned_line and not cleaned_line.isspace():
+                    current_content.append(cleaned_line)
+        
+        if current_section and current_content:
+            sections[current_section] = '\n'.join(current_content).strip()
+        
+        formatted_desc = []
+        for section in ['Impact', 'Patches', 'Workarounds', 'Recommendation', 'References']:
+            if section.lower() in [s.lower() for s in sections.keys()]:
+                section_content = sections.get(section) or sections.get(section.lower())
+                formatted_desc.append(f"*{section}*\n{section_content}")
+        
+        return '\n\n'.join(formatted_desc)
+        
+        # Existing section-based formatting logic
+        sections = {}
+        current_section = None
+        current_content = []
+        
         for line in description.split('\n'):
             line = line.strip()
             # Skip empty lines
