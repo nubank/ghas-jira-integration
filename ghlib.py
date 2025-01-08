@@ -542,6 +542,9 @@ class DependabotAlert(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
 
+    def get_type(self):
+        return "Dependabot"     
+
     def can_transition(self):
         return True
 

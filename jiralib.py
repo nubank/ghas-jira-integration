@@ -28,7 +28,7 @@ severity_mapping = {
 TITLE_PREFIXES = {
     "Alert": "[Code Scanning Alert]:",
     "Secret": "[Secret Scanning Alert]:",
-    "DependabotAlert": "[Dependabot Alert]:",
+    "Dependabot": "[Dependabot Alert]:",
 }
 
 CODE_SCANNING_TEMPLATE = """
@@ -233,7 +233,7 @@ class JiraProject:
 
         logger.debug(f"Creating issue for alert_type: {alert_type}")
 
-        if alert_type == "DependabotAlert":
+        if alert_type == "Dependabot":
             description = DEPENDABOT_TEMPLATE.format(
                 long_desc=long_desc,
                 full_description=full_description,
