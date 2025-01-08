@@ -231,6 +231,8 @@ class JiraProject:
 
         logger.debug(f"Creating issue for alert_type: {alert_type}")
 
+        package_info = package_info or {}
+
         if alert_type == "DependabotAlert":
             description = DEPENDABOT_TEMPLATE.format(
                 long_desc=long_desc,
