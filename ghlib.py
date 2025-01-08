@@ -542,7 +542,7 @@ class DependabotAlert(AlertBase):
         return True
 
     def long_desc(self):
-        return f"Dependabot Alert: {self.json.get('security_advisory', {}).get('summary', '')}"
+        return f"{self.json.get('security_advisory', {}).get('summary', '')}"
 
     def short_desc(self):
         return f"Dependency: {self.json.get('dependency', {}).get('package', {}).get('name', '')}"

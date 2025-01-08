@@ -269,18 +269,7 @@ class JiraProject:
             summary="{long_desc}".format(
                 long_desc=long_desc
             ),
-            description=DESC_TEMPLATE.format(
-                long_desc=long_desc,
-                full_description=full_description,
-                alert_url=alert_url,
-                repo_id=repo_id,
-                alert_type=alert_type,
-                alert_num=alert_num,
-                repo_key=repo_key,
-                alert_key=alert_key,
-                location=location,
-                responsible_teams=responsible_teams,
-            ),
+            description=description,
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
             customfield_12957='Unknown',
