@@ -51,9 +51,7 @@ ALERT_KEY={alert_key}
 
 DEPENDABOT_TEMPLATE = """
 {long_desc}
-Vulnerable Package: {package_name}
-Current Version: {current_version}
-Fixed Version: {fixed_version}
+Package: {package_name}
 Manifest Path: {location}
 Responsible Teams: {responsible_teams}
 Security Advisory:
