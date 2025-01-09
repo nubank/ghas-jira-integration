@@ -724,4 +724,7 @@ class DependabotAlert(AlertBase):
         return "dependabot"
     
     def get_cve(self):
-        return self.json.get("security_advisory", {}).get("cve_id", "")
+        cve = self.json.get("security_advisory", {}).get("cve_id", "")
+        if not cve:
+            return None
+        return cve
