@@ -652,14 +652,11 @@ class DependabotAlert(AlertBase):
         if not description:
             return "No description available."
     
-        # If description doesn't have sections (###), format as simple description
+        # Handle simple description without sections
         if '###' not in description:
             formatted_desc = []
-                
-            # Add description under Impact section if it's a simple text
             formatted_desc.append(f"*Impact*\n{description}")
             
-            # Add CVE/GHSA reference if available
             references = []
             if security_advisory.get("cve_id"):
                 references.append(f"https://nvd.nist.gov/vuln/detail/{security_advisory['cve_id']}")
@@ -671,41 +668,35 @@ class DependabotAlert(AlertBase):
                 
             return "\n\n".join(formatted_desc)
         
-        # Existing section-based formatting logic
+        # Process sections with ### markers
         sections = {}
         current_section = None
         current_content = []
         
         for line in description.split('\n'):
             line = line.strip()
-            # Skip empty lines
-            if not line:
-                continue
             
-            # Clean up numbered list formatting
-            if line.startswith(('1.', 'a.')):
-                continue
-                
             if line.startswith('###'):
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
                 current_section = line.replace('###', '').strip()
                 current_content = []
-            else:
-                # Skip if line only contains numbers or letters with dots
-                if not line.replace('.', '').strip().isalnum():
-                    current_content.append(line)
+            elif line:  # Add any non-empty line to current section
+                current_content.append(line)
         
+        # Add final section
         if current_section and current_content:
             sections[current_section] = '\n'.join(current_content).strip()
         
+        # Format output with desired section order
         formatted_desc = []
-        for section in ['*Impact*', '*Patches*', '*Workarounds*', '*Recommendation*', '*References*']:
-            if section.lower() in [s.lower() for s in sections.keys()]:
-                section_content = sections.get(section) or sections.get(section.lower())
-                formatted_desc.append(f"*{section}*\n{section_content}")
+        section_order = ['Impact', 'Patches', 'Workarounds', 'Recommendation', 'References']
         
-        return '\n\n'.join(formatted_desc)
+        for section in section_order:
+            if section in sections:
+                formatted_desc.append(f"*{section}*\n{sections[section]}")
+        
+        return "\n\n".join(formatted_desc)
     
     def get_cwe(self):
         cwes = self.json.get("security_advisory", {}).get("cwes", [])
