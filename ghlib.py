@@ -655,6 +655,8 @@ class DependabotAlert(AlertBase):
         # If description doesn't have sections (###), format as simple description
         if '###' not in description:
             formatted_desc = []
+                
+            # Add description under Impact section if it's a simple text
             formatted_desc.append(f"*Impact*\n{description}")
             
             # Add CVE/GHSA reference if available
@@ -669,16 +671,19 @@ class DependabotAlert(AlertBase):
                 
             return "\n\n".join(formatted_desc)
         
-        # Section-based formatting logic
+        # Existing section-based formatting logic
         sections = {}
         current_section = None
         current_content = []
         
         for line in description.split('\n'):
             line = line.strip()
-            
             # Skip empty lines
             if not line:
+                continue
+            
+            # Clean up numbered list formatting
+            if line.startswith(('1.', 'a.')):
                 continue
                 
             if line.startswith('###'):
@@ -687,19 +692,18 @@ class DependabotAlert(AlertBase):
                 current_section = line.replace('###', '').strip()
                 current_content = []
             else:
-                current_content.append(line)
+                # Skip if line only contains numbers or letters with dots
+                if not line.replace('.', '').strip().isalnum():
+                    current_content.append(line)
         
-        # Add last section
         if current_section and current_content:
             sections[current_section] = '\n'.join(current_content).strip()
         
-        # Format sections in desired order
         formatted_desc = []
-        section_order = ['*Impact*', '*Patches*', '*Workarounds*', '*Recommendation*', '*References*']
-        
-        for section in section_order:
-            if section in sections:
-                formatted_desc.append(f"*{section}*\n{sections[section]}")
+        for section in ['*Impact*', '*Patches*', '*Workarounds*', '*Recommendation*', '*References*']:
+            if section.lower() in [s.lower() for s in sections.keys()]:
+                section_content = sections.get(section) or sections.get(section.lower())
+                formatted_desc.append(f"*{section}*\n{section_content}")
         
         return '\n\n'.join(formatted_desc)
     
