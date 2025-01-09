@@ -297,7 +297,7 @@ class JiraProject:
             customfield_17255=cwe_list,
             customfield_10548={'value': owasp_category},
             customfield_18385=['MobSec'],
-            customfield_17301={'value': cve},
+            customfield_17301={'value': [cve] if cve else []},
         )
 
         jira_issue = JiraIssue(self, raw)
