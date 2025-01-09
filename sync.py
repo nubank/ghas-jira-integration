@@ -72,6 +72,7 @@ class Sync:
                 alert.location(),
                 alert.get_responsible_teams(),
                 alert.get_package_info(),
+                alert.get_cve(),
                 )
 
             if newissue is None:

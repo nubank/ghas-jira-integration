@@ -574,6 +574,9 @@ class Secret(AlertBase):
     
     def get_cwe(self):
         return None
+    
+    def get_tool_name(self):
+        return "GitHub - Secret Scanning"
 
 class DependabotAlert(AlertBase):
     def __init__(self, github_repo, json):
@@ -702,7 +705,6 @@ class DependabotAlert(AlertBase):
         return '\n\n'.join(formatted_desc)
     
     def get_cwe(self):
-        """Get CWE information from Dependabot security advisory"""
         cwes = self.json.get("security_advisory", {}).get("cwes", [])
         if not cwes:
             return None
@@ -717,3 +719,6 @@ class DependabotAlert(AlertBase):
   
     def get_tool_name(self):
         return "dependabot"
+    
+    def get_cve(self):
+        return self.json.get("security_advisory", {}).get("cve_id", "")

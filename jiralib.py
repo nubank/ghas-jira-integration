@@ -31,6 +31,12 @@ TITLE_PREFIXES = {
     "Dependabot": "[Dependabot Alert]:",
 }
 
+owasp_mapping = {
+    "Dependabot": "2024:M2 - Inadequate Supply Chain Security",
+    "Alert": "2021:A04 - Insecure Design", 
+    "Secret": "2024:M1 - Improper Credential Usage"
+}
+
 CODE_SCANNING_TEMPLATE = """
 {long_desc}
 
@@ -229,12 +235,14 @@ class JiraProject:
         location,
         responsible_teams,
         package_info=None,
+        cve=None,
     ):
         if alert_type in ["Secret"]:
             return None
 
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
+        owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
 
         logger.debug(f"Creating issue for alert_type: {alert_type}")
 
@@ -276,9 +284,8 @@ class JiraProject:
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
             customfield_12957='Unknown',
-            #customfield_12957={'value': responsible_teams[0] if responsible_teams else 'Unknown'},  
             customfield_12927={'value': 'Unknown'},
-            customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
+            customfield_13397={'value': (tool_mapping.get(tool_name, {}))},
             customfield_10457={'value': (severity_mapping.get(severity, default_severity))},
             customfield_12954={'value': 'Internal'},
             customfield_16751=['mini-meta-repo'],
@@ -288,8 +295,9 @@ class JiraProject:
             customfield_15569={'value': 'Nubank'},
             customfield_16749=language if alert_type != "Dependabot" else None,
             customfield_17255=cwe_list,
-            customfield_10548={'value': '2021:A04 - Insecure Design'},
+            customfield_10548={'value': owasp_category},
             customfield_18385=['MobSec'],
+            customfield_17301=['value': cve],
         )
 
         jira_issue = JiraIssue(self, raw)
