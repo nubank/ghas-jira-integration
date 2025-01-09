@@ -32,7 +32,7 @@ TITLE_PREFIXES = {
 }
 
 owasp_mapping = {
-    "Dependabot": "2024:M2 - Inadequate Supply Chain Security",
+    "Dependabot": "2021:A06 - Vulnerable and Outdated Components",
     "Alert": "2021:A04 - Insecure Design", 
     "Secret": "2024:M1 - Improper Credential Usage"
 }
@@ -296,7 +296,7 @@ class JiraProject:
             customfield_15569={'value': 'Nubank'},
             customfield_16749=language if alert_type != "Dependabot" else None,
             customfield_17255=cwe_list,
-            customfield_10548={'value': owasp_category},
+          #  customfield_10548={'value': owasp_category},
             customfield_18385=['MobSec'],
             customfield_17301=cve_field,
         )
