@@ -235,7 +235,7 @@ class JiraProject:
         location,
         responsible_teams,
         package_info=None,
-        cve,
+        cve=None,
     ):
         if alert_type in ["Secret"]:
             return None
