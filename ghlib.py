@@ -441,6 +441,9 @@ class AlertBase:
 
     def get_package_info(self):
         return None
+    
+    def get_cve(self):
+        return None
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
