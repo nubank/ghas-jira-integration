@@ -243,6 +243,7 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
+        cve_field = [cve] if cve else []
 
         logger.debug(f"Creating issue for alert_type: {alert_type}")
 
@@ -297,7 +298,7 @@ class JiraProject:
             customfield_17255=cwe_list,
             customfield_10548={'value': owasp_category},
             customfield_18385=['MobSec'],
-            customfield_17301={'value': cve},
+            customfield_17301=cve_field,
         )
 
         jira_issue = JiraIssue(self, raw)
