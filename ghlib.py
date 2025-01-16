@@ -123,6 +123,19 @@ class GitHub:
         resp.raise_for_status()
         return resp.json()
 
+    def get_team_members(self, org, team_slug):
+        """Get members of a GitHub team"""
+        try:
+            resp = requests.get(
+                f"{self.url}/orgs/{org}/teams/{team_slug}/members",
+                headers=self.default_headers(),
+                timeout=util.REQUEST_TIMEOUT
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except HTTPError as e:
+            logger.error(f"Failed to get team members for {team_slug}: {e}")
+            return []
 
 class GHRepository:
     def __init__(self, github, repo_id):
@@ -433,6 +446,22 @@ class AlertBase:
 
     def get_cwe(self):
         return None
+
+    def get_team_members(self):
+        """Get all members from responsible teams"""
+        teams = self.get_responsible_teams()
+        if not teams:
+            return []
+            
+        # Get org from repo_id (e.g. "nubank/repo-name")
+        org = self.github_repo.repo_id.split('/')[0]
+        
+        all_members = []
+        for team in teams.split(', '):
+            members = self.gh.get_team_members(org, team)
+            all_members.extend(members)
+            
+        return all_members
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):

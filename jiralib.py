@@ -48,6 +48,9 @@ This information was automatically collected from the repository's codeowners fi
 *More details*
 {alert_url}
 
+*Members*
+{all_members}
+
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
 DO NOT MODIFY DESCRIPTION BELOW LINE.
