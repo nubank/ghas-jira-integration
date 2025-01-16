@@ -469,9 +469,6 @@ class Alert(AlertBase):
         )
         resp.raise_for_status()
 
-    def location(self):
-        return ''
-
     def get_full_description(self):
         rule = self.json.get("rule", {})
         
