@@ -499,11 +499,16 @@ class Alert(AlertBase):
                     sections[current_section] = '\n'.join(current_content).strip()
                 current_section = line.replace('## ', '').strip()
                 current_content = []
+                # Skip References section
+                if current_section == 'References':
+                    current_section = None
+                    current_content = []
             else:
-                current_content.append(line)
+                if current_section and current_section != 'References':
+                    current_content.append(line)
         
-        # Add final section
-        if current_section and current_content:
+        # Add final section if not References
+        if current_section and current_section != 'References' and current_content:
             sections[current_section] = '\n'.join(current_content).strip()
         
         # Format output with desired section order
@@ -511,10 +516,13 @@ class Alert(AlertBase):
         if full_desc:
             formatted_sections.append(full_desc)
         
-        section_order = ['Description', 'Recommendation', 'Example', 'References']
+        section_order = ['Description', 'Recommendation', 'Example']
         for section in section_order:
             if section in sections:
                 formatted_sections.append(f"*{section}*\n{sections[section]}")
+        
+        # Add code scanning link
+        formatted_sections.append(f"Check more information at {self.hyperlink()}")
         
         return '\n\n'.join(formatted_sections)
 

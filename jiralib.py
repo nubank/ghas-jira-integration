@@ -36,13 +36,13 @@ owasp_mapping = {
 }
 
 DESC_TEMPLATE = """
-{long_desc}
-
 {full_description}
 
-*Location:* {location}
+*Location*
+{location}
 
-*Responsible Teams:* {responsible_teams}
+*Responsible Teams*
+{responsible_teams}
 This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
 ----
