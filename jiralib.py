@@ -36,9 +36,6 @@ owasp_mapping = {
 }
 
 DESC_TEMPLATE = """
-{long_desc}
-
-{full_description}
 
 *Location:* {location}
 

@@ -492,7 +492,6 @@ class Alert(AlertBase):
             if line.startswith('# '):  # Main header
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
-                current_section = "Description"
                 current_content = [line.replace('# ', '')]
             elif line.startswith('## '):  # Subheader
                 if current_section and current_content:
