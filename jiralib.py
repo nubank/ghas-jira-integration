@@ -213,6 +213,7 @@ class JiraProject:
         cwe_list,
         location,
         responsible_teams,
+        all_members,
     ):
         if alert_type in ["Secret"]:
             return None
