@@ -579,3 +579,6 @@ class Secret(AlertBase):
     
     def get_tool_name(self):
         return "GitHub - Secret Scanning"
+    
+    def location(self):
+        return None
