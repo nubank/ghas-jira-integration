@@ -456,12 +456,15 @@ class AlertBase:
         # Get org from repo_id (e.g. "nubank/repo-name")
         org = self.github_repo.repo_id.split('/')[0]
         
-        all_members = []
+        member_logins = []
         for team in teams.split(', '):
             members = self.gh.get_team_members(org, team)
-            all_members.extend(members)
-            
-        return all_members
+            # Extract only login values from member objects
+            logins = [member.get('login') for member in members if member.get('login')]
+            member_logins.extend(logins)
+        
+        # Format for Jira display
+        return ", ".join(member_logins) if member_logins else ""
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
