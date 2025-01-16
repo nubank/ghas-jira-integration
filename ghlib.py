@@ -334,16 +334,6 @@ class GHRepository:
                 # propagate everything else
                 raise         
 
-    def get_team_members(self, org, team_slug):
-        resp = requests.get(
-            f"{self.url}/orgs/{org}/teams/{team_slug}/members",
-            headers=self.default_headers(),
-            timeout=util.REQUEST_TIMEOUT
-        )
-        resp.raise_for_status()
-        members = [member.get('login') for member in resp.json()]
-        return members
-
 class AlertBase:
     def __init__(self, github_repo, json):
         self.github_repo = github_repo
