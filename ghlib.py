@@ -547,8 +547,8 @@ class Secret(AlertBase):
             self.github_repo.repo_id + "/" + self.get_type() + "/" + str(self.number())
         )
 
-    def location(self):
-        return ''
+    def get_location(self):
+        return None
 
     def do_adjust_state(self, target_state):
         state = "open"
@@ -580,5 +580,3 @@ class Secret(AlertBase):
     def get_tool_name(self):
         return "GitHub - Secret Scanning"
     
-    def location(self):
-        return None
