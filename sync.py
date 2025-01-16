@@ -69,7 +69,7 @@ class Sync:
                 alert.get_identification_date(),
                 alert.get_language(),
                 alert.get_cwe(),
-                alert.location(),
+                alert.get_location(),
                 alert.get_responsible_teams(),
                 )
 
