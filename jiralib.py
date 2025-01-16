@@ -45,6 +45,9 @@ DESC_TEMPLATE = """
 {responsible_teams}
 This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
+More details
+{alert_url}
+
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
 DO NOT MODIFY DESCRIPTION BELOW LINE.

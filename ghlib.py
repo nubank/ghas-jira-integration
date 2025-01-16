@@ -492,7 +492,7 @@ class Alert(AlertBase):
             if line.startswith('# '):  # Main header
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
-                current_section = "Description"
+                current_section = "Details"  # Changed from "Description" to "Details"
                 current_content = [line.replace('# ', '')]
             elif line.startswith('## '):  # Subheader
                 if current_section and current_content:
@@ -516,13 +516,10 @@ class Alert(AlertBase):
         if full_desc:
             formatted_sections.append(full_desc)
         
-        section_order = ['Description', 'Recommendation', 'Example']
+        section_order = ['Details', 'Recommendation', 'Example']  # Changed from "Description" to "Details"
         for section in section_order:
             if section in sections:
                 formatted_sections.append(f"*{section}*\n{sections[section]}")
-        
-        # Add code scanning link
-        formatted_sections.append(f"Check more information at {self.hyperlink()}")
         
         return '\n\n'.join(formatted_sections)
 
