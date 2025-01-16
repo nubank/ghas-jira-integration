@@ -237,6 +237,7 @@ class JiraProject:
                 alert_key=alert_key,
                 location=location,
                 responsible_teams=responsible_teams,
+                all_members=all_members,
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
