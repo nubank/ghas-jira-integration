@@ -235,7 +235,7 @@ class JiraProject:
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
             customfield_12957='Unknown',
-]            customfield_12927={'value': 'Unknown'},
+            customfield_12927={'value': 'Unknown'},
             customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
             customfield_10457={'value': (severity_mapping.get(severity, default_severity))},
             customfield_12954={'value': 'Internal'},
