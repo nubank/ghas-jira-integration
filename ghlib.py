@@ -480,24 +480,43 @@ class Alert(AlertBase):
             return full_desc
             
         # Process help text sections
-        sections = []
-        current_section = []
+        sections = {}
+        current_section = None
+        current_content = []
         
         for line in help_text.split('\n'):
             line = line.strip()
             if not line:
                 continue
-            if line.startswith('#'):
-                if current_section:
-                    sections.append('\n'.join(current_section))
-                    current_section = []
-                continue
-            current_section.append(line)
-            
-        if current_section:
-            sections.append('\n'.join(current_section))
-            
-        return f"{full_desc}\n\n{'\n\n'.join(sections)}"
+                
+            if line.startswith('# '):  # Main header
+                if current_section and current_content:
+                    sections[current_section] = '\n'.join(current_content).strip()
+                current_section = "Description"
+                current_content = [line.replace('# ', '')]
+            elif line.startswith('## '):  # Subheader
+                if current_section and current_content:
+                    sections[current_section] = '\n'.join(current_content).strip()
+                current_section = line.replace('## ', '').strip()
+                current_content = []
+            else:
+                current_content.append(line)
+        
+        # Add final section
+        if current_section and current_content:
+            sections[current_section] = '\n'.join(current_content).strip()
+        
+        # Format output with desired section order
+        formatted_sections = []
+        if full_desc:
+            formatted_sections.append(full_desc)
+        
+        section_order = ['Description', 'Recommendation', 'Example', 'References']
+        for section in section_order:
+            if section in sections:
+                formatted_sections.append(f"*{section}*\n{sections[section]}")
+        
+        return '\n\n'.join(formatted_sections)
 
     def get_cwe(self):
         tags = self.json.get("rule", {}).get("tags", [])
