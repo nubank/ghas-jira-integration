@@ -29,14 +29,21 @@ TITLE_PREFIXES = {
     "Secret": "[Secret Scanning Alert]:",
 }
 
+
+owasp_mapping = {
+    "Alert": "2021:A04 - Insecure Design", 
+    "Secret": "2024:M1 - Improper Credential Usage"
+}
+
 DESC_TEMPLATE = """
 {long_desc}
 
 {full_description}
 
-{location}
+*Location:* {location}
 
-{responsible_teams}
+*Responsible Teams:* {responsible_teams}
+This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
@@ -206,6 +213,8 @@ class JiraProject:
 
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
+        owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
+
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{long_desc}".format(
@@ -226,7 +235,6 @@ class JiraProject:
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
             customfield_12957='Unknown',
-            #customfield_12957={'value': responsible_teams[0] if responsible_teams else 'Unknown'},  
             customfield_12927={'value': 'Unknown'},
             customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
             customfield_10457={'value': (severity_mapping.get(severity, default_severity))},
@@ -236,9 +244,9 @@ class JiraProject:
             customfield_21734=short_desc,
             customfield_10611=identification_date,
             customfield_15569={'value': 'Nubank'},
-            customfield_16749=language,
+            customfield_16749=language if alert_type == 'Secret' else None,
             customfield_17255=cwe_list,
-            customfield_10548={'value': '2021:A04 - Insecure Design'},
+            customfield_10548={'value': owasp_category},
             customfield_18385=['MobSec'],
         )
 

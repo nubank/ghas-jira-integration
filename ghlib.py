@@ -394,8 +394,17 @@ class AlertBase:
         file_path = self.get_location()
         if not file_path:
             return []
-        responsible_teams = self.github_repo.parse_codeowners_for_path(file_path)
-        return responsible_teams
+            
+        teams = self.github_repo.parse_codeowners_for_path(file_path)
+        
+        # Clean team names by removing organization prefix
+        cleaned_teams = [
+            team.replace('@nubank/', '') 
+            for team in teams
+        ]
+        
+        # Join team names with comma and space
+        return ", ".join(cleaned_teams) if cleaned_teams else ""
     
     def get_severity(self):
         security_severity_level = self.json.get("rule", {}).get("security_severity_level", "")
@@ -404,12 +413,7 @@ class AlertBase:
         return security_severity_level
 
     def get_full_description(self):
-        full_description = self.json.get("most_recent_instance", {}).get("message", {}).get("text", "") 
-#        full_description = json.dumps(self.json, indent=4)
-#        full_description = self.json.get("rule", {},).get("full_description", "")
-        if not full_description:
-            full_description = "Secret found on code. No more description available."
-        return full_description   
+        return
 
     def get_identification_date(self):
         identification_date = self.json.get("created_at", "")
@@ -428,15 +432,7 @@ class AlertBase:
         return []
 
     def get_cwe(self):
-        tags = self.json.get("rule", {}).get("tags", [])
-        cwe_list = []
-        for tag in tags:
-            if tag.startswith("external/cwe/"):
-                cwe = tag.replace("external/cwe/", "")
-                cwe_list.append(cwe)
-        if not cwe_list:
-            return
-        return cwe_list
+        return None
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
@@ -476,16 +472,46 @@ class Alert(AlertBase):
     def location(self):
         return ''
 
-#    def get_full_description(self):
-#        print(self.json) 
-#        rule = self.json.get("rule", {})
-#        full_description = rule.get("full_description", "")
-#        
-#        if not full_description:
-#            print("Rule key present:", "rule" in self.json) 
-#            print("Full description key present:", "full_description" in rule)  
-#            return "No description available."
-#        return full_description
+    def get_full_description(self):
+        rule = self.json.get("rule", {})
+        
+        # Get description sections
+        full_desc = rule.get("full_description", "").strip()
+        help_text = rule.get("help", "")
+        
+        if not help_text:
+            return full_desc
+            
+        # Process help text sections
+        sections = []
+        current_section = []
+        
+        for line in help_text.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith('#'):
+                if current_section:
+                    sections.append('\n'.join(current_section))
+                    current_section = []
+                continue
+            current_section.append(line)
+            
+        if current_section:
+            sections.append('\n'.join(current_section))
+            
+        return f"{full_desc}\n\n{'\n\n'.join(sections)}"
+
+    def get_cwe(self):
+        tags = self.json.get("rule", {}).get("tags", [])
+        cwe_list = []
+        for tag in tags:
+            if tag.startswith("external/cwe/"):
+                cwe = tag.replace("external/cwe/", "")
+                cwe_list.append(cwe)
+        if not cwe_list:
+            return
+        return cwe_list
     
 class Secret(AlertBase):
     def __init__(self, github_repo, json):
@@ -528,3 +554,12 @@ class Secret(AlertBase):
             timeout=util.REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
+    
+    def get_full_description(self):
+        return None
+    
+    def get_cwe(self):
+        return None
+    
+    def get_tool_name(self):
+        return "GitHub - Secret Scanning"
