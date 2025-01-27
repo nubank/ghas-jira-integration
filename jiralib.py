@@ -51,6 +51,9 @@ This information was automatically collected from the repository's codeowners fi
 *Members*
 {all_members}
 
+*Assignee*
+{assignee}
+
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
 DO NOT MODIFY DESCRIPTION BELOW LINE.
@@ -222,7 +225,7 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
-        assignee = alert.get_valid_assignee()
+        assignee = alert.get_valid_assignee() if alert else None
 
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -241,6 +244,7 @@ class JiraProject:
                 location=location,
                 responsible_teams=responsible_teams,
                 all_members=all_members,
+                assignee=assignee or "No assignee found",
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
