@@ -257,7 +257,7 @@ class JiraProject:
                 location=location,
                 responsible_teams=responsible_teams,
                 all_members=all_members,
-                assignee=assignee or "No assignee found",
+                assignee=assignee_value or "No assignee found",
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
