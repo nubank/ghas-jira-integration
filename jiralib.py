@@ -228,29 +228,29 @@ class JiraProject:
         assignee_value = alert.get_valid_assignee() if alert else None
         assignee_field = None
 
-    if assignee_value:
-        try:
-            # Check if user is assignable first
-            assignable_users = self.j._get_json(
-                f'user/assignable/search',
-                params={
-                    'project': self.projectkey,
-                    'query': assignee_value,
-                    'maxResults': 1
-                }
-            )
-            
-            if assignable_users and len(assignable_users) > 0:
-                assignee_field = {
-                    "accountId": assignable_users[0]['accountId']
-                }
-                logger.info(f"Found assignable user: {assignee_value}")
-            else:
-                logger.warning(f"User {assignee_value} cannot be assigned to issues")
+        if assignee_value:
+            try:
+                # Check if user is assignable first
+                assignable_users = self.j._get_json(
+                    f'user/assignable/search',
+                    params={
+                        'project': self.projectkey,
+                        'query': assignee_value,
+                        'maxResults': 1
+                    }
+                )
+                
+                if assignable_users and len(assignable_users) > 0:
+                    assignee_field = {
+                        "accountId": assignable_users[0]['accountId']
+                    }
+                    logger.info(f"Found assignable user: {assignee_value}")
+                else:
+                    logger.warning(f"User {assignee_value} cannot be assigned to issues")
+                    assignee_field = None
+            except Exception as e:
+                logger.error(f"Error checking assignable user: {e}")
                 assignee_field = None
-        except Exception as e:
-            logger.error(f"Error checking assignable user: {e}")
-            assignee_field = None
     
         raw = self.j.create_issue(
             project=self.projectkey,
