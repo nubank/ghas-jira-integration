@@ -230,9 +230,13 @@ class JiraProject:
 
         if assignee_value:
             try:
-                # Use username parameter instead of query for Jira Cloud
-                jira_users = self.j.search_users(username=assignee_value)
-                if jira_users:
+                # Use GDPR compliant search
+                jira_users = self.j.search_users(
+                    query=assignee_value,
+                    maxResults=1,
+                    includeInactive=False
+                )
+                if jira_users and len(jira_users) > 0:
                     logger.info(f"Found Jira user for {assignee_value}: {jira_users[0].displayName}")
                     assignee_field = {
                         "accountId": jira_users[0].accountId
@@ -242,17 +246,6 @@ class JiraProject:
                     logger.warning(f"No Jira user found for {assignee_value}")
             except Exception as e:
                 logger.error(f"Error finding Jira user for {assignee_value}: {e}")
-                # Try alternative search method
-                try:
-                    jira_users = self.j.search_users(user=assignee_value)
-                    if jira_users:
-                        logger.info(f"Found Jira user (alternative method) for {assignee_value}")
-                        assignee_field = {
-                            "accountId": jira_users[0].accountId
-                        }
-                except Exception as e2:
-                    logger.error(f"Alternative search failed for {assignee_value}: {e2}")
-
     
         raw = self.j.create_issue(
             project=self.projectkey,
