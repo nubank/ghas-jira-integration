@@ -273,7 +273,6 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
-            assignee=assignee_field,
             customfield_12957='Unknown',
             customfield_12927={'value': 'Unknown'},
             customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
@@ -307,9 +306,11 @@ class JiraProject:
         )
 
         if assignee_field:
-            logger.info(f"Set assignee for {raw.key}: {assignee_value}")
-        else:
-            logger.warning(f"Could not set assignee for {raw.key}")
+            try:
+                self.j.assign_issue(raw.key, assignee_field['accountId'])
+                logger.info(f"Set assignee for {raw.key}: {assignee_value}")
+            except Exception as e:
+                logger.warning(f"Could not set assignee for {raw.key}: {e}")
 
         return jira_issue
 
