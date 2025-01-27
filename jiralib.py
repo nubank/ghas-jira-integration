@@ -289,42 +289,42 @@ class JiraProject:
             except Exception as e:
                 logger.error(f"Failed to assign user {assignee_value}: {e}")"""
 
-        # Try to assign from team members list
-        member_list = all_members.split(', ') if all_members else []
-        
-        for github_login in member_list:
-            try:
-                # Get GitHub user details
-                github_user = self.gh.get_user_details(github_login)
-                if not github_user or not github_user.get('name'):
-                    continue
+            # Try to assign from team members list
+            member_list = all_members.split(', ') if all_members else []
+            
+            for github_login in member_list:
+                try:
+                    # Get GitHub user details
+                    github_user = self.gh.get_user_details(github_login)
+                    if not github_user or not github_user.get('name'):
+                        continue
+                        
+                    real_name = github_user['name']
                     
-                real_name = github_user['name']
-                
-                # Try to find assignable Jira user
-                assignable_users = self.j._get_json(
-                    'user/assignable/search',
-                    params={
-                        'project': self.projectkey,
-                        'query': real_name,
-                        'maxResults': 1
-                    }
-                )
-                
-                if assignable_users and len(assignable_users) > 0:
-                    account_id = assignable_users[0]['accountId']
-                    # Try to assign
-                    response = self.j._session.put(
-                        f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
-                        json={'accountId': account_id}
+                    # Try to find assignable Jira user
+                    assignable_users = self.j._get_json(
+                        'user/assignable/search',
+                        params={
+                            'project': self.projectkey,
+                            'query': real_name,
+                            'maxResults': 1
+                        }
                     )
-                    if response.status_code == 204:
-                        logger.info(f"Successfully assigned {raw.key} to {real_name}")
-                        break  # Stop trying other members
-                
-            except Exception as e:
-                logger.warning(f"Failed to assign {github_login}: {e}")
-                continue  # Try next member
+                    
+                    if assignable_users and len(assignable_users) > 0:
+                        account_id = assignable_users[0]['accountId']
+                        # Try to assign
+                        response = self.j._session.put(
+                            f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
+                            json={'accountId': account_id}
+                        )
+                        if response.status_code == 204:
+                            logger.info(f"Successfully assigned {raw.key} to {real_name}")
+                            break  # Stop trying other members
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to assign {github_login}: {e}")
+                    continue  # Try next member
 
         jira_issue = JiraIssue(self, raw)
 
