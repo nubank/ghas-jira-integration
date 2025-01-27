@@ -230,30 +230,29 @@ class JiraProject:
 
         if assignee_value:
             try:
-                # Use search/query endpoint for GDPR compliance
-                jira_users = self.j.search_users_for_picker(
-                    query=assignee_value,
-                    project=self.projectkey,
+                # Try find_users_with_browse_permission - available in Jira SDK
+                jira_users = self.j.find_users_with_browse_permission(
+                    user=assignee_value,
+                    projectKey=self.projectkey,
                     maxResults=1,
-                    showAvatar=False
+                    includeInactive=False
                 )
                 
-                if isinstance(jira_users, dict) and jira_users.get('users'):
-                    user = jira_users['users'][0]
-                    logger.info(f"Found Jira user for {assignee_value}: {user.get('displayName')}")
+                if jira_users:
+                    user = jira_users[0]
+                    logger.info(f"Found Jira user for {assignee_value}: {user.displayName}")
                     assignee_field = {
-                        "accountId": user.get('accountId')
+                        "accountId": user.accountId
                     }
-                    logger.info(f"Using accountId: {user.get('accountId')}")
+                    logger.info(f"Using accountId: {user.accountId}")
                 else:
                     logger.warning(f"No Jira user found for {assignee_value}")
             except Exception as e:
                 logger.error(f"Error finding Jira user for {assignee_value}: {e}")
-                # Try alternative search method
                 try:
-                    users = self.j.search_users_for_issue(
-                        query=assignee_value,
-                        project=self.projectkey,
+                    # Try find_users as fallback
+                    users = self.j.find_users(
+                        user=assignee_value,
                         maxResults=1
                     )
                     if users:
