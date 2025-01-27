@@ -137,6 +137,20 @@ class GitHub:
             logger.error(f"Failed to get team members for {team_slug}: {e}")
             return []
 
+    def get_user_details(self, username):
+        """Get GitHub user details"""
+        try:
+            resp = requests.get(
+                f"{self.url}/users/{username}",
+                headers=self.default_headers(),
+                timeout=util.REQUEST_TIMEOUT
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except HTTPError as e:
+            logger.error(f"Failed to get user details for {username}: {e}")
+            return None
+
 class GHRepository:
     def __init__(self, github, repo_id):
         self.gh = github
@@ -448,23 +462,30 @@ class AlertBase:
         return None
 
     def get_team_members(self):
-        """Get all members from responsible teams"""
         teams = self.get_responsible_teams()
         if not teams:
             return []
             
-        # Get org from repo_id (e.g. "nubank/repo-name")
         org = self.github_repo.repo_id.split('/')[0]
         
         member_logins = []
         for team in teams.split(', '):
             members = self.gh.get_team_members(org, team)
-            # Extract only login values from member objects
             logins = [member.get('login') for member in members if member.get('login')]
             member_logins.extend(logins)
         
-        # Format for Jira display
-        return ", ".join(member_logins) if member_logins else ""
+        return member_logins
+
+    def get_valid_assignee(self):
+        """Find first team member with valid name"""
+        member_logins = self.get_team_members()
+        
+        for login in member_logins:
+            user_details = self.gh.get_user_details(login)
+            if user_details and user_details.get('name'):
+                return user_details['name']
+                
+        return None
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):

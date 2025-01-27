@@ -221,6 +221,7 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
+        assignee = self.get_valid_assignee()
 
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -242,6 +243,7 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
+            assignee={'name': assignee} if assignee else None,
             customfield_12957='Unknown',
             customfield_12927={'value': 'Unknown'},
             customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
