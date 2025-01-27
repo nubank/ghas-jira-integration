@@ -225,30 +225,6 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
-        assignee_value = alert.get_valid_assignee() if alert else None
-        assignee_field = None
-
-        if assignee_value:
-            try:
-                # Get assignable user directly
-                assignable_users = self.j._get_json(
-                    'user/assignable/search',
-                    params={
-                        'project': self.projectkey,
-                        'query': assignee_value,
-                        'maxResults': 1
-                    }
-                )
-                
-                if assignable_users and len(assignable_users) > 0:
-                    account_id = assignable_users[0]['accountId']
-                    # Update issue after creation with found account ID
-                    self.j.assign_issue(raw.key, account_id)
-                    logger.info(f"Assigned issue {raw.key} to {assignee_value}")
-                else:
-                    logger.warning(f"No assignable user found for {assignee_value}")
-            except Exception as e:
-                logger.error(f"Failed to assign user {assignee_value}: {e}")
     
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -287,6 +263,28 @@ class JiraProject:
             customfield_18385=['MobSec'],
         )
 
+        assignee_value = alert.get_valid_assignee() if alert else None
+    
+        if assignee_value:
+            try:
+                assignable_users = self.j._get_json(
+                    'user/assignable/search',
+                    params={
+                        'project': self.projectkey,
+                        'query': assignee_value,
+                        'maxResults': 1
+                    }
+                )
+                
+                if assignable_users and len(assignable_users) > 0:
+                    account_id = assignable_users[0]['accountId']
+                    self.j.assign_issue(raw.key, account_id)
+                    logger.info(f"Assigned issue {raw.key} to {assignee_value}")
+                else:
+                    logger.warning(f"No assignable user found for {assignee_value}")
+            except Exception as e:
+                logger.error(f"Failed to assign user {assignee_value}: {e}")
+
         jira_issue = JiraIssue(self, raw)
 
         logger.info(
@@ -302,13 +300,6 @@ class JiraProject:
                 repo_id=repo_id,
             )
         )
-
-        if assignee_field:
-            try:
-                self.j.assign_issue(raw.key, assignee_field['accountId'])
-                logger.info(f"Set assignee for {raw.key}: {assignee_value}")
-            except Exception as e:
-                logger.warning(f"Could not set assignee for {raw.key}: {e}")
 
         return jira_issue
 
