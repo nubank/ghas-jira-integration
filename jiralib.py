@@ -230,12 +230,21 @@ class JiraProject:
 
         if assignee_value:
             try:
-                # Use GDPR compliant search
+                # Try GDPR compliant search with accountId
                 jira_users = self.j.search_users(
-                    user=assignee_value,
+                    accountId=assignee_value,  # Try accountId first
                     maxResults=1,
-                    includeInactive=False
+                    startAt=0
                 )
+                
+                if not jira_users:
+                    # Try email search as fallback
+                    jira_users = self.j.search_users(
+                        query=f"{assignee_value}@nubank.com.br",
+                        maxResults=1,
+                        startAt=0
+                    )
+                    
                 if jira_users and len(jira_users) > 0:
                     logger.info(f"Found Jira user for {assignee_value}: {jira_users[0].displayName}")
                     assignee_field = {
