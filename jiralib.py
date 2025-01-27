@@ -266,6 +266,7 @@ class JiraProject:
 
         if assignee_value:
             try:
+                # Get assignable users with GDPR compliant endpoint
                 assignable_users = self.j._get_json(
                     'user/assignable/search',
                     params={
@@ -277,8 +278,12 @@ class JiraProject:
                 
                 if assignable_users and len(assignable_users) > 0:
                     account_id = assignable_users[0]['accountId']
-                    self.j.assign_issue(raw.key, account_id)
-                    logger.info(f"Assigned issue {raw.key} to {assignee_value}")
+                    # Use PUT method directly for assignment
+                    self.j._session.put(
+                        f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
+                        json={'accountId': account_id}
+                    )
+                    logger.info(f"Assigned issue {raw.key} to {assignee_value} (accountId: {account_id})")
                 else:
                     logger.warning(f"No assignable user found for {assignee_value}")
             except Exception as e:
