@@ -228,43 +228,29 @@ class JiraProject:
         assignee_value = alert.get_valid_assignee() if alert else None
         assignee_field = None
 
-        if assignee_value:
-            try:
-                # Try standard user search first
-                jira_users = self.j.search_users(
-                    search=assignee_value,
-                    projectKey=self.projectkey,
-                    startAt=0,
-                    maxResults=1
-                )
-                
-                if jira_users:
-                    user = jira_users[0]
-                    logger.info(f"Found Jira user for {assignee_value}: {user.displayName}")
-                    assignee_field = {
-                        "accountId": user.accountId
-                    }
-                    logger.info(f"Using accountId: {user.accountId}")
-                else:
-                    logger.warning(f"No Jira user found for {assignee_value}")
-            except Exception as e:
-                logger.error(f"Error finding Jira user for {assignee_value}: {e}")
-                try:
-                    # Try direct REST API call as fallback
-                    response = self.j._get_json(
-                        'user/search',
-                        params={
-                            'query': assignee_value,
-                            'project': self.projectkey,
-                            'maxResults': 1
-                        }
-                    )
-                    if response and len(response) > 0:
-                        assignee_field = {
-                            "accountId": response[0]['accountId']
-                        }
-                except Exception as e2:
-                    logger.error(f"Alternative search failed: {e2}")
+    if assignee_value:
+        try:
+            # Check if user is assignable first
+            assignable_users = self.j._get_json(
+                f'user/assignable/search',
+                params={
+                    'project': self.projectkey,
+                    'query': assignee_value,
+                    'maxResults': 1
+                }
+            )
+            
+            if assignable_users and len(assignable_users) > 0:
+                assignee_field = {
+                    "accountId": assignable_users[0]['accountId']
+                }
+                logger.info(f"Found assignable user: {assignee_value}")
+            else:
+                logger.warning(f"User {assignee_value} cannot be assigned to issues")
+                assignee_field = None
+        except Exception as e:
+            logger.error(f"Error checking assignable user: {e}")
+            assignee_field = None
     
         raw = self.j.create_issue(
             project=self.projectkey,
