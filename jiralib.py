@@ -225,8 +225,21 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
-        assignee = alert.get_valid_assignee() if alert else None
-
+        assignee_value = alert.get_valid_assignee() if alert else None
+        assignee_field = None
+        if assignee_value:
+            try:
+                # Try to find user in Jira
+                jira_user = self.j.search_users(query=assignee_value)
+                if jira_user:
+                    # Use first matching user
+                    assignee_field = {
+                        'name': jira_user[0].name,
+                        'accountId': jira_user[0].accountId
+                    }
+            except Exception as e:
+                logger.error(f"Failed to find Jira user for {assignee_value}: {e}")
+    
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{long_desc}".format(
@@ -248,7 +261,7 @@ class JiraProject:
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
-            assignee={'name': assignee} if assignee else None,
+            assignee=assignee_field,
             customfield_12957='Unknown',
             customfield_12927={'value': 'Unknown'},
             customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
