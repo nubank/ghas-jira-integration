@@ -232,7 +232,7 @@ class JiraProject:
             try:
                 # Use GDPR compliant search
                 jira_users = self.j.search_users(
-                    query=assignee_value,
+                    user=assignee_value,
                     maxResults=1,
                     includeInactive=False
                 )
