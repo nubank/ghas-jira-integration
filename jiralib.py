@@ -227,19 +227,31 @@ class JiraProject:
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
         assignee_value = alert.get_valid_assignee() if alert else None
         assignee_field = None
+
         if assignee_value:
             try:
-                # Search by display name or email
-                jira_users = self.j.search_users(query=assignee_value)
+                # Use username parameter instead of query for Jira Cloud
+                jira_users = self.j.search_users(username=assignee_value)
                 if jira_users:
                     logger.info(f"Found Jira user for {assignee_value}: {jira_users[0].displayName}")
                     assignee_field = {
-                        "accountId": jira_users[0].accountId  # Use only accountId for Jira Cloud
+                        "accountId": jira_users[0].accountId
                     }
+                    logger.info(f"Using accountId: {jira_users[0].accountId}")
                 else:
                     logger.warning(f"No Jira user found for {assignee_value}")
             except Exception as e:
                 logger.error(f"Error finding Jira user for {assignee_value}: {e}")
+                # Try alternative search method
+                try:
+                    jira_users = self.j.search_users(user=assignee_value)
+                    if jira_users:
+                        logger.info(f"Found Jira user (alternative method) for {assignee_value}")
+                        assignee_field = {
+                            "accountId": jira_users[0].accountId
+                        }
+                except Exception as e2:
+                    logger.error(f"Alternative search failed for {assignee_value}: {e2}")
 
     
         raw = self.j.create_issue(
