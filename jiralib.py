@@ -230,9 +230,9 @@ class JiraProject:
 
         if assignee_value:
             try:
-                # Check if user is assignable first
+                # Get assignable user directly
                 assignable_users = self.j._get_json(
-                    f'user/assignable/search',
+                    'user/assignable/search',
                     params={
                         'project': self.projectkey,
                         'query': assignee_value,
@@ -241,16 +241,14 @@ class JiraProject:
                 )
                 
                 if assignable_users and len(assignable_users) > 0:
-                    assignee_field = {
-                        "accountId": assignable_users[0]['accountId']
-                    }
-                    logger.info(f"Found assignable user: {assignee_value}")
+                    account_id = assignable_users[0]['accountId']
+                    # Update issue after creation with found account ID
+                    self.j.assign_issue(raw.key, account_id)
+                    logger.info(f"Assigned issue {raw.key} to {assignee_value}")
                 else:
-                    logger.warning(f"User {assignee_value} cannot be assigned to issues")
-                    assignee_field = None
+                    logger.warning(f"No assignable user found for {assignee_value}")
             except Exception as e:
-                logger.error(f"Error checking assignable user: {e}")
-                assignee_field = None
+                logger.error(f"Failed to assign user {assignee_value}: {e}")
     
         raw = self.j.create_issue(
             project=self.projectkey,
