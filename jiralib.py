@@ -230,12 +230,12 @@ class JiraProject:
 
         if assignee_value:
             try:
-                # Try find_users_with_browse_permission - available in Jira SDK
-                jira_users = self.j.find_users_with_browse_permission(
-                    user=assignee_value,
+                # Try standard user search first
+                jira_users = self.j.search_users(
+                    search=assignee_value,
                     projectKey=self.projectkey,
-                    maxResults=1,
-                    includeInactive=False
+                    startAt=0,
+                    maxResults=1
                 )
                 
                 if jira_users:
@@ -250,14 +250,18 @@ class JiraProject:
             except Exception as e:
                 logger.error(f"Error finding Jira user for {assignee_value}: {e}")
                 try:
-                    # Try find_users as fallback
-                    users = self.j.find_users(
-                        user=assignee_value,
-                        maxResults=1
+                    # Try direct REST API call as fallback
+                    response = self.j._get_json(
+                        'user/search',
+                        params={
+                            'query': assignee_value,
+                            'project': self.projectkey,
+                            'maxResults': 1
+                        }
                     )
-                    if users:
+                    if response and len(response) > 0:
                         assignee_field = {
-                            "accountId": users[0].accountId
+                            "accountId": response[0]['accountId']
                         }
                 except Exception as e2:
                     logger.error(f"Alternative search failed: {e2}")
