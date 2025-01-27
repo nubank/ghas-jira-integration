@@ -229,16 +229,18 @@ class JiraProject:
         assignee_field = None
         if assignee_value:
             try:
-                # Try to find user in Jira
-                jira_user = self.j.search_users(query=assignee_value)
-                if jira_user:
-                    # Use first matching user
+                # Search by display name or email
+                jira_users = self.j.search_users(query=assignee_value)
+                if jira_users:
+                    logger.info(f"Found Jira user for {assignee_value}: {jira_users[0].displayName}")
                     assignee_field = {
-                        'name': jira_user[0].name,
-                        'accountId': jira_user[0].accountId
+                        "accountId": jira_users[0].accountId  # Use only accountId for Jira Cloud
                     }
+                else:
+                    logger.warning(f"No Jira user found for {assignee_value}")
             except Exception as e:
-                logger.error(f"Failed to find Jira user for {assignee_value}: {e}")
+                logger.error(f"Error finding Jira user for {assignee_value}: {e}")
+
     
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -293,6 +295,11 @@ class JiraProject:
                 repo_id=repo_id,
             )
         )
+
+        if assignee_field:
+            logger.info(f"Set assignee for {raw.key}: {assignee_value}")
+        else:
+            logger.warning(f"Could not set assignee for {raw.key}")
 
         return jira_issue
 
