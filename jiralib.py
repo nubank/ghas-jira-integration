@@ -264,16 +264,18 @@ class JiraProject:
             customfield_18385=['MobSec'],
         )
 
-        member_list = all_members.split(', ') if all_members else []
+        member_list = all_members if isinstance(all_members, list) else []
         
         for github_login in member_list:
             try:
                 # Get GitHub user details
                 github_user = self.gh.get_user_details(github_login)
                 if not github_user or not github_user.get('name'):
+                    logger.warning(f"No valid name found for {github_login}")
                     continue
                     
                 real_name = github_user['name']
+                logger.info(f"Found GitHub user: {real_name}")
                 
                 # Try to find assignable Jira user
                 assignable_users = self.j._get_json(
@@ -287,18 +289,18 @@ class JiraProject:
                 
                 if assignable_users and len(assignable_users) > 0:
                     account_id = assignable_users[0]['accountId']
-                    # Try to assign
                     response = self.j._session.put(
                         f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                         json={'accountId': account_id}
                     )
                     if response.status_code == 204:
                         logger.info(f"Successfully assigned {raw.key} to {real_name}")
-                        break  # Stop trying other members
-                
+                        break
+                    
             except Exception as e:
                 logger.warning(f"Failed to assign {github_login}: {e}")
-                continue  # Try next member
+                continue
+
 
         jira_issue = JiraIssue(self, raw)
 
