@@ -264,43 +264,30 @@ class JiraProject:
             customfield_18385=['MobSec'],
         )
 
-        member_list = all_members if isinstance(all_members, list) else []
-        
-        for github_login in member_list:
+        if assignee_value:
             try:
-                # Get GitHub user details
-                github_user = self.gh.get_user_details(github_login)
-                if not github_user or not github_user.get('name'):
-                    logger.warning(f"No valid name found for {github_login}")
-                    continue
-                    
-                real_name = github_user['name']
-                logger.info(f"Found GitHub user: {real_name}")
-                
-                # Try to find assignable Jira user
+                # Get assignable users with GDPR compliant endpoint
                 assignable_users = self.j._get_json(
                     'user/assignable/search',
                     params={
                         'project': self.projectkey,
-                        'query': real_name,
+                        'query': assignee_value,
                         'maxResults': 1
                     }
                 )
                 
                 if assignable_users and len(assignable_users) > 0:
                     account_id = assignable_users[0]['accountId']
-                    response = self.j._session.put(
+                    # Use PUT method directly for assignment
+                    self.j._session.put(
                         f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                         json={'accountId': account_id}
                     )
-                    if response.status_code == 204:
-                        logger.info(f"Successfully assigned {raw.key} to {real_name}")
-                        break
-                    
+                    logger.info(f"Assigned issue {raw.key} to {assignee_value} (accountId: {account_id})")
+                else:
+                    logger.warning(f"No assignable user found for {assignee_value}")
             except Exception as e:
-                logger.warning(f"Failed to assign {github_login}: {e}")
-                continue
-
+                logger.error(f"Failed to assign user {assignee_value}: {e}")
 
         jira_issue = JiraIssue(self, raw)
 
