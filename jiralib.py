@@ -230,24 +230,38 @@ class JiraProject:
 
         if assignee_value:
             try:
-                # Use assignable/search endpoint for GDPR compliance
-                jira_users = self.j.search_assignable_users_for_projects(
-                    username=assignee_value,
-                    projectKeys=self.projectkey,
+                # Use search/query endpoint for GDPR compliance
+                jira_users = self.j.search_users_for_picker(
+                    query=assignee_value,
+                    project=self.projectkey,
                     maxResults=1,
-                    startAt=0
+                    showAvatar=False
                 )
                 
-                if jira_users and len(jira_users) > 0:
-                    logger.info(f"Found Jira user for {assignee_value}: {jira_users[0].displayName}")
+                if isinstance(jira_users, dict) and jira_users.get('users'):
+                    user = jira_users['users'][0]
+                    logger.info(f"Found Jira user for {assignee_value}: {user.get('displayName')}")
                     assignee_field = {
-                        "accountId": jira_users[0].accountId
+                        "accountId": user.get('accountId')
                     }
-                    logger.info(f"Using accountId: {jira_users[0].accountId}")
+                    logger.info(f"Using accountId: {user.get('accountId')}")
                 else:
                     logger.warning(f"No Jira user found for {assignee_value}")
             except Exception as e:
                 logger.error(f"Error finding Jira user for {assignee_value}: {e}")
+                # Try alternative search method
+                try:
+                    users = self.j.search_users_for_issue(
+                        query=assignee_value,
+                        project=self.projectkey,
+                        maxResults=1
+                    )
+                    if users:
+                        assignee_field = {
+                            "accountId": users[0].accountId
+                        }
+                except Exception as e2:
+                    logger.error(f"Alternative search failed: {e2}")
     
         raw = self.j.create_issue(
             project=self.projectkey,
