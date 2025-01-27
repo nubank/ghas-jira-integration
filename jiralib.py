@@ -225,7 +225,8 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
-    
+        assignee_value = alert.get_valid_assignee() if alert else None
+
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{long_desc}".format(
@@ -263,8 +264,6 @@ class JiraProject:
             customfield_18385=['MobSec'],
         )
 
-        assignee_value = alert.get_valid_assignee() if alert else None
-    
         if assignee_value:
             try:
                 assignable_users = self.j._get_json(
