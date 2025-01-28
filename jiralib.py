@@ -31,7 +31,7 @@ TITLE_PREFIXES = {
 
 owasp_mapping = {
     "Alert": "2021:A04 - Insecure Design", 
-    "Secret": "2024:M1 - Improper Credential Usage"
+    "secret": "2024:M1 - Improper Credential Usage"
 }
 
 DESC_TEMPLATE = """
