@@ -24,14 +24,9 @@ severity_mapping = {
     "warning": "Informative"
 }
 
-TITLE_PREFIXES = {
-    "Alert": "[Code Scanning Alert]:",
-    "Secret": "[Secret Scanning Alert]:",
-}
-
 owasp_mapping = {
     "Alert": "2021:A04 - Insecure Design", 
-    "secret": "2024:M1 - Improper Credential Usage"
+    "Secret": "2021:A02 - Cryptographic Failures"
 }
 
 DESC_TEMPLATE = """
