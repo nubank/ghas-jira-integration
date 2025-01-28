@@ -241,7 +241,7 @@ class JiraProject:
             summary=summary,
             description=template.format(
                 long_desc=long_desc,
-                short_desc=short_desc
+                short_desc=short_desc,
                 full_description=full_description,
                 alert_url=alert_url,
                 repo_id=repo_id,
@@ -263,13 +263,14 @@ class JiraProject:
             customfield_12954={'value': 'Internal'},
             customfield_16751=['mini-meta-repo'],
             customfield_16748=alert_url,
-            customfield_21734=short_desc,
+            customfield_21734=short_desc if alert_type == 'Alert' else None,
             customfield_10611=identification_date,
             customfield_15569={'value': 'Nubank'},
             customfield_16749=language if alert_type == 'Secret' else None,
             customfield_17255=cwe_list,
             customfield_10548={'value': (owasp_mapping.get(alert_type, None))},
             customfield_18385=['MobSec'],
+            customfield_21106=short_desc if alert_type == 'Secret' else None,
         )
 
         valid_assignees = alert.get_valid_assignees()
