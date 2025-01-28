@@ -281,12 +281,11 @@ class JiraProject:
                         f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                         json={'accountId': account_id}
                     )
-                    logger.info(f"Successfully assigned {raw.key} to {assignee_name}")
                     break  
                 else:
-                    logger.warning(f"User {assignee_name} not assignable, trying next user")
                     continue
-                    
+            except Exception:
+                continue
 
         jira_issue = JiraIssue(self, raw)
 
