@@ -225,7 +225,7 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
-        assignee_value = alert.get_valid_assignee() if alert else None
+        assignee_value = alert.get_valid_assignees() if alert else None
 
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -268,7 +268,6 @@ class JiraProject:
 
         for assignee_name in valid_assignees:
             try:
-                # Get assignable users with GDPR compliant endpoint
                 assignable_users = self.j._get_json(
                     'user/assignable/search',
                     params={
@@ -280,13 +279,12 @@ class JiraProject:
                 
                 if assignable_users and len(assignable_users) > 0:
                     account_id = assignable_users[0]['accountId']
-                    # Try to assign
                     self.j._session.put(
                         f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                         json={'accountId': account_id}
                     )
                     logger.info(f"Successfully assigned {raw.key} to {assignee_name}")
-                    break  # Stop trying other assignees if successful
+                    break  
                 else:
                     logger.warning(f"User {assignee_name} not assignable, trying next user")
                     continue
