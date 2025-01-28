@@ -477,15 +477,16 @@ class AlertBase:
         return member_logins
 
     def get_valid_assignee(self):
-        """Find first team member with valid name"""
+        """Get list of valid assignee names from team members"""
         member_logins = self.get_team_members()
+        valid_assignees = []
         
         for login in member_logins:
             user_details = self.gh.get_user_details(login)
             if user_details and user_details.get('name'):
-                return user_details['name']
+                valid_assignees.append(user_details['name'])
                 
-        return None
+        return valid_assignees
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):

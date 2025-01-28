@@ -264,30 +264,36 @@ class JiraProject:
             customfield_18385=['MobSec'],
         )
 
-        if assignee_value:
+        valid_assignees = alert.get_valid_assignees()
+
+        for assignee_name in valid_assignees:
             try:
                 # Get assignable users with GDPR compliant endpoint
                 assignable_users = self.j._get_json(
                     'user/assignable/search',
                     params={
                         'project': self.projectkey,
-                        'query': assignee_value,
+                        'query': assignee_name,
                         'maxResults': 1
                     }
                 )
                 
                 if assignable_users and len(assignable_users) > 0:
                     account_id = assignable_users[0]['accountId']
-                    # Use PUT method directly for assignment
+                    # Try to assign
                     self.j._session.put(
                         f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                         json={'accountId': account_id}
                     )
-                    logger.info(f"Assigned issue {raw.key} to {assignee_value} (accountId: {account_id})")
+                    logger.info(f"Successfully assigned {raw.key} to {assignee_name}")
+                    break  # Stop trying other assignees if successful
                 else:
-                    logger.warning(f"No assignable user found for {assignee_value}")
+                    logger.warning(f"User {assignee_name} not assignable, trying next user")
+                    continue
+                    
             except Exception as e:
-                logger.error(f"Failed to assign user {assignee_value}: {e}")
+                logger.error(f"Failed to assign {assignee_name}: {e}")
+                continue  # Try next assignee
 
         jira_issue = JiraIssue(self, raw)
 
