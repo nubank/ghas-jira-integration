@@ -597,7 +597,7 @@ class Secret(AlertBase):
         return self.json["secret_type"]
 
     def short_desc(self):
-        return self.long_desc()
+        return self.json["secret_type_display_name"]
 
     def get_key(self):
         return util.make_key(

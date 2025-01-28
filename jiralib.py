@@ -56,14 +56,7 @@ ALERT_KEY={alert_key}
 """
 
 SECRET_DESC_TEMPLATE = """
-Secret of type {alert_type} found in the repository.
-
-*Responsible Teams*
-{responsible_teams}
-This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
-
-*Team Members*
-{assignee}
+Secret of type {short_desc} found in the repository.
 
 *More details*
 {alert_url}
@@ -238,7 +231,7 @@ class JiraProject:
         formatted_assignees = ", ".join(assignee_value) if assignee_value else "No assignee found"
 
         summary = (
-            f"Secret Alert: {alert_type} found in {repo_id}" 
+            f"{short_desc} secret found in mini-meta-repo" 
             if alert_type == "Secret" 
             else long_desc
         )
