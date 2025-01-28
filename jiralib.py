@@ -61,6 +61,28 @@ REPOSITORY_KEY={repo_key}
 ALERT_KEY={alert_key}
 """
 
+SECRET_DESC_TEMPLATE = """
+Secret of type {alert_type} found in the repository.
+
+*Responsible Teams*
+{responsible_teams}
+This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
+
+*Team Members*
+{assignee}
+
+*More details*
+{alert_url}
+
+----
+This issue was automatically generated from a GitHub Secret Scanning alert.
+DO NOT MODIFY DESCRIPTION BELOW LINE.
+REPOSITORY_NAME={repo_id}
+ALERT_TYPE={alert_type}
+ALERT_NUMBER={alert_num}
+REPOSITORY_KEY={repo_key}
+ALERT_KEY={alert_key}
+"""
 
 STATE_ISSUE_SUMMARY = "[Code Scanning Issue States]"
 STATE_ISSUE_KEY = util.make_key("gh2jira-state-issue")
@@ -216,9 +238,8 @@ class JiraProject:
         all_members,
         alert
     ):
-        if alert_type in ["Secret"]:
-            return None
 
+        template = SECRET_DESC_TEMPLATE if alert_type == "Secret" else DESC_TEMPLATE
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
