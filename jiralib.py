@@ -234,17 +234,19 @@ class JiraProject:
     ):
 
         template = SECRET_DESC_TEMPLATE if alert_type == "Secret" else DESC_TEMPLATE
-        default_tool_name = 'GitHub - Secret Scanning'
-        default_severity = 'High'
         assignee_value = alert.get_valid_assignees() if alert else None
         formatted_assignees = ", ".join(assignee_value) if assignee_value else "No assignee found"
 
+        summary = (
+            f"Secret Alert: {alert_type} found in {repo_id}" 
+            if alert_type == "Secret" 
+            else long_desc
+        )
+
         raw = self.j.create_issue(
             project=self.projectkey,
-            summary="{long_desc}".format(
-                long_desc=long_desc
-            ),
-            description=DESC_TEMPLATE.format(
+            summary=summary,
+            description=template.format(
                 long_desc=long_desc,
                 full_description=full_description,
                 alert_url=alert_url,
@@ -306,14 +308,6 @@ class JiraProject:
         logger.info(
             "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
                 issue_key=raw.key, alert_num=alert_num, repo_id=repo_id
-            )
-        )
-        logger.info(
-            "Created issue {issue_key} for {alert_type} {alert_num} in {repo_id}.".format(
-                issue_key=raw.key,
-                alert_type=alert_type,
-                alert_num=alert_num,
-                repo_id=repo_id,
             )
         )
 
