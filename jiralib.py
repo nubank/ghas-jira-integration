@@ -29,7 +29,6 @@ TITLE_PREFIXES = {
     "Secret": "[Secret Scanning Alert]:",
 }
 
-
 owasp_mapping = {
     "Alert": "2021:A04 - Insecure Design", 
     "Secret": "2024:M1 - Improper Credential Usage"
@@ -242,7 +241,6 @@ class JiraProject:
         template = SECRET_DESC_TEMPLATE if alert_type == "Secret" else DESC_TEMPLATE
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
-        owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
         assignee_value = alert.get_valid_assignees() if alert else None
         formatted_assignees = ", ".join(assignee_value) if assignee_value else "No assignee found"
 
@@ -269,8 +267,8 @@ class JiraProject:
             labels=self.labels,
             customfield_12957='Unknown',
             customfield_12927={'value': 'Unknown'},
-            customfield_13397={'value': (tool_mapping.get(tool_name, default_tool_name))},
-            customfield_10457={'value': (severity_mapping.get(severity, default_severity))},
+            customfield_13397={'value': (tool_mapping.get(tool_name, 'GitHub - Secret Scanning'))},
+            customfield_10457={'value': (severity_mapping.get(severity, 'High'))},
             customfield_12954={'value': 'Internal'},
             customfield_16751=['mini-meta-repo'],
             customfield_16748=alert_url,
@@ -279,7 +277,7 @@ class JiraProject:
             customfield_15569={'value': 'Nubank'},
             customfield_16749=language if alert_type == 'Secret' else None,
             customfield_17255=cwe_list,
-            customfield_10548={'value': owasp_category},
+            customfield_10548={'value': (owasp_mapping.get(alert_type, None))},
             customfield_18385=['MobSec'],
         )
 

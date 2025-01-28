@@ -138,7 +138,6 @@ class GitHub:
             return []
 
     def get_user_details(self, username):
-        """Get GitHub user details"""
         try:
             resp = requests.get(
                 f"{self.url}/users/{username}",
