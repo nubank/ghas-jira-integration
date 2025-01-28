@@ -45,7 +45,7 @@ DESC_TEMPLATE = """
 {responsible_teams}
 This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
-*Assignee*
+*Team Members*
 {assignee}
 
 *More details*
