@@ -45,14 +45,11 @@ DESC_TEMPLATE = """
 {responsible_teams}
 This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
 
-*More details*
-{alert_url}
-
-*Members*
-{all_members}
-
 *Assignee*
 {assignee}
+
+*More details*
+{alert_url}
 
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
@@ -226,6 +223,7 @@ class JiraProject:
         default_severity = 'High'
         owasp_category = owasp_mapping.get(alert_type, "2021:A04 - Insecure Design")
         assignee_value = alert.get_valid_assignees() if alert else None
+        formatted_assignees = ", ".join(assignee_value) if assignee_value else "No assignee found"
 
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -244,7 +242,7 @@ class JiraProject:
                 location=location,
                 responsible_teams=responsible_teams,
                 all_members=all_members,
-                assignee=assignee_value or "No assignee found",
+                assignee=formatted_assignees,
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,
@@ -289,9 +287,6 @@ class JiraProject:
                     logger.warning(f"User {assignee_name} not assignable, trying next user")
                     continue
                     
-            except Exception as e:
-                logger.error(f"Failed to assign {assignee_name}: {e}")
-                continue  # Try next assignee
 
         jira_issue = JiraIssue(self, raw)
 
