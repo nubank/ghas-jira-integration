@@ -270,7 +270,7 @@ class JiraProject:
             customfield_17255=cwe_list,
             customfield_10548={'value': (owasp_mapping.get(alert_type, None))},
             customfield_18385=['MobSec'],
-            customfield_21106=short_desc if alert_type == 'Secret' else None,
+            customfield_21106={'value': short_desc} if alert_type == 'Secret' else None,
         )
 
         valid_assignees = alert.get_valid_assignees()
