@@ -241,6 +241,7 @@ class JiraProject:
             summary=summary,
             description=template.format(
                 long_desc=long_desc,
+                short_desc=short_desc
                 full_description=full_description,
                 alert_url=alert_url,
                 repo_id=repo_id,
