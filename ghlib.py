@@ -476,7 +476,7 @@ class AlertBase:
         
         return member_logins
 
-    def get_valid_assignee(self):
+    def get_valid_assignees(self):
         """Get list of valid assignee names from team members"""
         member_logins = self.get_team_members()
         valid_assignees = []
