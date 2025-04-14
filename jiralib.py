@@ -270,38 +270,29 @@ class JiraIssue:
         return raw_state != self.endstate
 
     def transition(self, transition):
-        if (
-            self.get_state()
-            and transition == self.reopenstate
-            or not self.get_state()
-            and transition == self.endstate
-        ):
-            # nothing to do
+        # If the issue is already in the desired state, there's nothing to do.
+        if (self.get_state() and transition == self.reopenstate) or (not self.get_state() and transition == self.endstate):
             return
-
-        jira_transitions = {
-            t["name"]: t["id"] for t in self.j.transitions(self.rawissue)
-        }
-        if transition not in jira_transitions:
-            logger.error(
+    
+        # Get the available transitions for the issue.
+        available_transitions = {t["name"]: t["id"] for t in self.j.transitions(self.rawissue)}
+        
+        # If the desired transition is not available, log a warning and return.
+        if transition not in available_transitions:
+            logger.warning(
                 'Transition "{transition}" not available for {issue_key}. Valid transitions: {jira_transitions}'.format(
                     transition=transition,
                     issue_key=self.rawissue.key,
-                    jira_transitions=list(jira_transitions),
+                    jira_transitions=list(available_transitions.keys()),
                 )
             )
-            raise Exception("Invalid JIRA transition")
-
-        self.j.transition_issue(self.rawissue, jira_transitions[transition])
-
+            return
+    
+        # Perform the transition.
+        self.j.transition_issue(self.rawissue, available_transitions[transition])
         action = "Reopening" if transition == self.reopenstate else "Closing"
-
-        logger.info(
-            "{action} issue {issue_key}".format(
-                action=action, issue_key=self.rawissue.key
-            )
-        )
-
+        logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
+    
     def persist_labels(self, labels):
         if labels:
             self.rawissue.update(fields={"labels": self.labels})
