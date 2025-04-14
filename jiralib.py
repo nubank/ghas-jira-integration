@@ -194,6 +194,7 @@ class JiraProject:
         identification_date,
         language,
         cwe_list,
+        cve
     ):
         if alert_type in ["Secret"]:
             return None
@@ -231,6 +232,7 @@ class JiraProject:
             customfield_17255=cwe_list,
             customfield_10548={'value': '2021:A04 - Insecure Design'},
             customfield_18385=['MobSec'],
+            customfield_17301=cve
         )
 
         jira_issue = JiraIssue(self, raw)

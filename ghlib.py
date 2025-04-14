@@ -328,6 +328,12 @@ class AlertBase:
             return
         return cwe_list
 
+    def get_cve(self):
+        cve = self.json.get("rule", {}).get("cve", "")
+        if not cve:
+            return
+        return cve
+
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
