@@ -331,8 +331,7 @@ class JiraIssue:
             return
     
         try:
-            self.j.transition_issue(self.rawissue, available_transitions[transition],
-                                     fields={"resolution": {"name": "Done"}})
+            self.j.transition_issue(self.rawissue, available_transitions[transition])
             action = "Reopening" if transition == self.reopenstate else "Closing"
             logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
         except Exception as e:
