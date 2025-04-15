@@ -314,14 +314,12 @@ class JiraIssue:
         return raw_state != self.endstate
 
     def transition(self, transition):
-        # If the issue is already in the desired state, there's nothing to do.
         if (self.get_state() and transition == self.reopenstate) or (not self.get_state() and transition == self.endstate):
             return
     
-        # Get the available transitions for the issue.
-        available_transitions = {t["name"]: t["id"] for t in self.j.transitions(self.rawissue)}
-        
-        # If the desired transition is not available, log a warning and return.
+        transitions = self.j.transitions(self.rawissue)
+        available_transitions = {t["name"]: t["id"] for t in transitions}
+    
         if transition not in available_transitions:
             logger.warning(
                 'Transition "{transition}" not available for {issue_key}. Valid transitions: {jira_transitions}'.format(
@@ -332,11 +330,14 @@ class JiraIssue:
             )
             return
     
-        # Perform the transition.
-        self.j.transition_issue(self.rawissue, available_transitions[transition])
-        action = "Reopening" if transition == self.reopenstate else "Closing"
-        logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
-
+        try:
+            self.j.transition_issue(self.rawissue, available_transitions[transition],
+                                     fields={"resolution": {"name": "Done"}})
+            action = "Reopening" if transition == self.reopenstate else "Closing"
+            logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
+        except Exception as e:
+            logger.error("Error transitioning issue {0}: {1}".format(self.rawissue.key, e))
+            
     def persist_labels(self, labels):
         if labels:
             self.rawissue.update(fields={"labels": self.labels})
