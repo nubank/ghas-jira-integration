@@ -314,7 +314,12 @@ class JiraIssue:
         return raw_state != self.endstate
 
     def transition(self, transition):
-        if (self.get_state() and transition == self.reopenstate) or (not self.get_state() and transition == self.endstate):
+        # Get the current status name (after stripping and lowercasing for safe comparison)
+        current_status = self.rawissue.fields.status.name.strip().lower()
+        target_status = transition.strip().lower()
+        
+        # If the issue is already in the target state, do nothing.
+        if current_status == target_status:
             return
     
         transitions = self.j.transitions(self.rawissue)
@@ -336,7 +341,7 @@ class JiraIssue:
             logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
         except Exception as e:
             logger.error("Error transitioning issue {0}: {1}".format(self.rawissue.key, e))
-            
+    
     def persist_labels(self, labels):
         if labels:
             self.rawissue.update(fields={"labels": self.labels})
