@@ -329,7 +329,7 @@ class AlertBase:
         return cwe_list
 
     def get_cve(self):
-        cve = self.json.get("rule", {}).get("cve", "")
+        cve = self.json.get("rule", {}).get("id", "")
         if not cve:
             return
         return cve
