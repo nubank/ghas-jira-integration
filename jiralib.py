@@ -319,10 +319,16 @@ class JiraIssue:
         current_status = self.rawissue.fields.status.name.strip().lower()
         target_status = transition.strip().lower()
         
-        logger.debug(f"Comparing: current='{current_status}', target='{target_status}'")
-
-        if current_status == target_status:
-            return
+        status_mapping = {
+            'concluído': 'done',
+            'a fazer': 'to do',
+            'em andamento': 'in progress',
+        }
+        
+        normalized_status = status_mapping.get(current_status, current_status)
+        
+        if normalized_status == target_status:
+        return
     
         transitions = self.j.transitions(self.rawissue)
         available_transitions = {t["name"]: t["id"] for t in transitions}
