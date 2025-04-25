@@ -328,7 +328,7 @@ class JiraIssue:
         normalized_status = status_mapping.get(current_status, current_status)
         
         if normalized_status == target_status:
-        return
+            return
     
         transitions = self.j.transitions(self.rawissue)
         available_transitions = {t["name"]: t["id"] for t in transitions}
