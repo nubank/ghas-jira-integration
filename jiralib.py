@@ -201,6 +201,8 @@ class JiraProject:
 
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
+        cve_field = [cve] if cve is not None else []
+
         raw = self.j.create_issue(
             project=self.projectkey,
             summary="{long_desc}".format(
@@ -232,7 +234,7 @@ class JiraProject:
             customfield_17255=cwe_list,
             customfield_10548={'value': '2021:A04 - Insecure Design'},
             customfield_18385=['MobSec'],
-            customfield_17301=[cve]
+            customfield_17301=cve_field
         )
 
         jira_issue = JiraIssue(self, raw)
