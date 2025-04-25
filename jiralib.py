@@ -319,6 +319,8 @@ class JiraIssue:
         current_status = self.rawissue.fields.status.name.strip().lower()
         target_status = transition.strip().lower()
         
+        logger.debug(f"Comparing: current='{current_status}', target='{target_status}'")
+
         if current_status == target_status:
             return
     
