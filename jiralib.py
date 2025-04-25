@@ -326,13 +326,6 @@ class JiraIssue:
         available_transitions = {t["name"]: t["id"] for t in transitions}
     
         if transition not in available_transitions:
-            logger.debug(
-                'Transition "{transition}" not available for {issue_key}. Valid transitions: {jira_transitions}'.format(
-                    transition=transition,
-                    issue_key=self.rawissue.key,
-                    jira_transitions=list(available_transitions.keys()),
-                )
-            )
             return
     
         try:
