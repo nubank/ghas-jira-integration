@@ -232,7 +232,7 @@ class JiraProject:
             customfield_17255=cwe_list,
             customfield_10548={'value': '2021:A04 - Insecure Design'},
             customfield_18385=['MobSec'],
-            customfield_17301=cve
+            customfield_17301=[cve]
         )
 
         jira_issue = JiraIssue(self, raw)
@@ -314,11 +314,9 @@ class JiraIssue:
         return raw_state != self.endstate
 
     def transition(self, transition):
-        # Get the current status name (after stripping and lowercasing for safe comparison)
         current_status = self.rawissue.fields.status.name.strip().lower()
         target_status = transition.strip().lower()
         
-        # If the issue is already in the target state, do nothing.
         if current_status == target_status:
             return
     
