@@ -332,7 +332,7 @@ class AlertBase:
         cve = self.json.get("rule", {}).get("id", "")
         if not cve:
             return
-        return cve
+        return cve.replace(" ", "-")
 
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
