@@ -322,7 +322,7 @@ class JiraIssue:
         logger.debug(f"Issue {self.rawissue.key} - Current: '{current_status}', Target: '{target_status}'")
 
         status_mapping = {
-            'concluído': 'done',
+            'concluído': 'Done',
             'a fazer': 'to do',
             'em andamento': 'in progress',
         }
