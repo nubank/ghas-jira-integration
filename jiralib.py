@@ -322,30 +322,22 @@ class JiraIssue:
         current_status = self.rawissue.fields.status.name.strip().lower()
         target_status = transition.strip().lower()
         
-        status_mapping = {
-            'concluído': 'Done',
-            'a fazer': 'to do',
-            'em andamento': 'in progress',
-        }
-        
-        normalized_status = status_mapping.get(current_status, current_status)
-
-        if normalized_status == target_status:
+        if current_status == target_status:
             return
-    
+        
         transitions = self.j.transitions(self.rawissue)
         available_transitions = {t["name"]: t["id"] for t in transitions}
-
+    
         if transition not in available_transitions:
             return
-    
+        
         try:
             self.j.transition_issue(self.rawissue, available_transitions[transition])
             action = "Reopening" if transition == self.reopenstate else "Closing"
             logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
         except Exception as e:
             logger.error("Error transitioning issue {0}: {1}".format(self.rawissue.key, e))
-
+    
     def persist_labels(self, labels):
         if labels:
             self.rawissue.update(fields={"labels": self.labels})
