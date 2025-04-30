@@ -307,8 +307,12 @@ class JiraIssue:
         return self.parse_state(self.rawissue.fields.status.name)
 
     def adjust_state(self, state):
-        if state:
-            self.transition(self.reopenstate)
+        if state: 
+            current_status = self.rawissue.fields.status.name.strip().lower()
+            if current_status == 'done':
+                self.transition("Reopen")
+            else:
+                self.transition(self.reopenstate)
         else:
             self.transition(self.endstate)
 
