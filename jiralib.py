@@ -227,7 +227,6 @@ class JiraProject:
             customfield_12954={'value': 'Internal'},
             customfield_16751=['mini-meta-repo'],
             customfield_16748=alert_url,
-            customfield_21734=short_desc,
             customfield_10611=identification_date,
             customfield_15569={'value': 'Nubank'},
             customfield_16749=language,
@@ -319,8 +318,6 @@ class JiraIssue:
         current_status = self.rawissue.fields.status.name.strip().lower()
         target_status = transition.strip().lower()
         
-        logger.debug(f"Issue {self.rawissue.key} - Current: '{current_status}', Target: '{target_status}'")
-
         status_mapping = {
             'concluído': 'Done',
             'a fazer': 'to do',
@@ -328,18 +325,14 @@ class JiraIssue:
         }
         
         normalized_status = status_mapping.get(current_status, current_status)
-        logger.debug(f"Normalized status: '{normalized_status}'")
 
         if normalized_status == target_status:
-            logger.debug(f"Issue {self.rawissue.key} already in target state, skipping transition")
             return
     
         transitions = self.j.transitions(self.rawissue)
         available_transitions = {t["name"]: t["id"] for t in transitions}
-        logger.debug(f"Available transitions: {available_transitions.keys()}")
 
         if transition not in available_transitions:
-            logger.warning(f"Transition '{transition}' not available for {self.rawissue.key}")
             return
     
         try:
