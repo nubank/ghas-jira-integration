@@ -306,11 +306,29 @@ class JiraIssue:
         return self.parse_state(self.rawissue.fields.status.name)
 
     def adjust_state(self, state):
-        if state:
-            self.transition(self.reopenstate)
+        if state:  # GitHub alert is open - issue should be reopened
+            current_status = self.rawissue.fields.status.name.strip().lower()
+            
+            # Create mapping to handle different languages
+            status_mapping = {
+                'concluído': 'done',
+                'a fazer': 'to do',
+                'em andamento': 'in progress',
+            }
+            
+            normalized_status = status_mapping.get(current_status, current_status)
+            
+            # If the issue is in Done status, transition to Replanning
+            if normalized_status == 'done':
+                logger.info(f"Reopening issue {self.rawissue.key} from Done to Replanning")
+                self.transition("Replanning")
+            else:
+                # Otherwise use the regular reopenstate
+                self.transition(self.reopenstate)
         else:
+            # GitHub alert is closed - transition to done
             self.transition(self.endstate)
-
+            
     def parse_state(self, raw_state):
         return raw_state != self.endstate
 
