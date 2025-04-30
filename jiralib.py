@@ -305,6 +305,12 @@ class JiraIssue:
     def get_state(self):
         return self.parse_state(self.rawissue.fields.status.name)
 
+    def add_comment(self, comment_text):
+        try:
+            self.j.add_comment(self.rawissue, comment_text)
+        except Exception as e:
+            logger.error(f"Error adding comment to issue {self.rawissue.key}: {e}")
+
     def adjust_state(self, state):
         if state: 
             current_status = self.rawissue.fields.status.name.strip().lower()
@@ -314,7 +320,8 @@ class JiraIssue:
                 self.transition(self.reopenstate)
         else:
             self.transition(self.endstate)
-
+            self.add_comment("Reminder: This alert needs to be closed in GHAS as well.")
+    
     def parse_state(self, raw_state):
         return raw_state != self.endstate
 
