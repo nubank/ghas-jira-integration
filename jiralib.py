@@ -319,57 +319,29 @@ class JiraIssue:
         target_status = transition.strip().lower()
         
         status_mapping = {
-            'concluído': 'done',
+            'concluído': 'Done',
             'a fazer': 'to do',
             'em andamento': 'in progress',
         }
         
         normalized_status = status_mapping.get(current_status, current_status)
-        
-        # Log current status and transition target
-        logger.debug(f"Transition attempt: {self.rawissue.key} from '{current_status}' to '{transition}'")
-    
+
         if normalized_status == target_status:
-            logger.debug(f"Skipping transition for {self.rawissue.key} - already in target state")
             return
-        
+    
         transitions = self.j.transitions(self.rawissue)
         available_transitions = {t["name"]: t["id"] for t in transitions}
-        
-        logger.debug(f"Available transitions for {self.rawissue.key}: {list(available_transitions.keys())}")
-        
+
         if transition not in available_transitions:
-            logger.warning(f"Transition '{transition}' not available for {self.rawissue.key}")
-            
-            # Try Jira transition by name rather than exact match
-            matched_transition = None
-            for t_name in available_transitions.keys():
-                if transition.lower() in t_name.lower():
-                    matched_transition = t_name
-                    logger.info(f"Found partial match: '{matched_transition}' for '{transition}'")
-                    break
-            
-            if matched_transition:
-                transition = matched_transition
-            else:
-                return
-        
-        try:
-            # Perform the transition
-            self.j.transition_issue(self.rawissue, available_transitions[transition])
-            
-            # Only log success AFTER the transition has been executed
-            action = "Reopened" if transition == self.reopenstate or transition == "Replanning" else "Closed"
-            logger.info(f"{action} issue {self.rawissue.key} to {transition} status")
-            
-            # Verify the transition worked
-            refreshed_issue = self.j.issue(self.rawissue.key)
-            new_status = refreshed_issue.fields.status.name
-            logger.info(f"New status for {self.rawissue.key}: {new_status}")
-            
-        except Exception as e:
-            logger.error(f"ERROR transitioning {self.rawissue.key} to {transition}: {e}")
+            return
     
+        try:
+            self.j.transition_issue(self.rawissue, available_transitions[transition])
+            action = "Reopening" if transition == self.reopenstate else "Closing"
+            logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
+        except Exception as e:
+            logger.error("Error transitioning issue {0}: {1}".format(self.rawissue.key, e))
+
     def persist_labels(self, labels):
         if labels:
             self.rawissue.update(fields={"labels": self.labels})
