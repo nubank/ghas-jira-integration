@@ -342,7 +342,7 @@ class JiraIssue:
     
         try:
             self.j.transition_issue(self.rawissue, available_transitions[transition])
-            action = "Reopening" if transition == self.reopenstate else "Closing"
+            action = "Reopening" if transition == self.reopenstate else "Changing status to"
             logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
         except Exception as e:
             logger.error("Error transitioning issue {0}: {1}".format(self.rawissue.key, e))
