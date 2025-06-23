@@ -223,7 +223,7 @@ class JiraProject:
         location,
         responsible_teams,
         all_members,
-        alert
+        alert,
         cve
     ):
 
