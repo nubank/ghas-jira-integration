@@ -301,7 +301,7 @@ class JiraProject:
         jira_issue = JiraIssue(self, raw)
 
         logger.info(
-            "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
+            "Created issue {issue_key} for alert {alert_num} ({alert_type}) in {repo_id}.".format(
                 issue_key=raw.key, alert_num=alert_num, repo_id=repo_id
             )
         )
