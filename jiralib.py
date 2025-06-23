@@ -224,6 +224,7 @@ class JiraProject:
         responsible_teams,
         all_members,
         alert
+        cve
     ):
 
         template = SECRET_DESC_TEMPLATE if alert_type == "Secret" else DESC_TEMPLATE
@@ -235,6 +236,9 @@ class JiraProject:
             if alert_type == "Secret" 
             else long_desc
         )
+        default_tool_name = 'GitHub - Secret Scanning'
+        default_severity = 'High'
+        cve_field = [cve] if cve is not None else []
 
         raw = self.j.create_issue(
             project=self.projectkey,
@@ -271,6 +275,7 @@ class JiraProject:
             customfield_10548={'value': (owasp_mapping.get(alert_type, None))},
             customfield_18385=['MobSec'],
             customfield_21106={'value': short_desc} if alert_type == 'Secret' else None,
+            customfield_17301=cve_field
         )
 
         valid_assignees = alert.get_valid_assignees()
@@ -300,9 +305,18 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
 
+        #logger.info(
+        #    "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
+        #        issue_key=raw.key, alert_num=alert_num, repo_id=repo_id
+        #    )
+        #)
+        
         logger.info(
-            "Created issue {issue_key} for alert {alert_num} ({alert_type}) in {repo_id}.".format(
-                issue_key=raw.key, alert_num=alert_num, repo_id=repo_id
+            "Created issue {issue_key} for {alert_type} {alert_num} in {repo_id}.".format(
+                issue_key=raw.key,
+                alert_type=alert_type,
+                alert_num=alert_num,
+                repo_id=repo_id,
             )
         )
 
@@ -360,8 +374,12 @@ class JiraIssue:
         return self.parse_state(self.rawissue.fields.status.name)
 
     def adjust_state(self, state):
-        if state:
-            self.transition(self.reopenstate)
+        if state: 
+            current_status = self.rawissue.fields.status.name.strip().lower()
+            if current_status == 'done':
+                self.transition("Reopen")
+            else:
+                self.transition(self.reopenstate)
         else:
             self.transition(self.endstate)
 
@@ -369,38 +387,33 @@ class JiraIssue:
         return raw_state != self.endstate
 
     def transition(self, transition):
-        if (
-            self.get_state()
-            and transition == self.reopenstate
-            or not self.get_state()
-            and transition == self.endstate
-        ):
-            # nothing to do
-            return
-
-        jira_transitions = {
-            t["name"]: t["id"] for t in self.j.transitions(self.rawissue)
+        current_status = self.rawissue.fields.status.name.strip().lower()
+        target_status = transition.strip().lower()
+        
+        status_mapping = {
+            'concluído': 'Done',
+            'a fazer': 'to do',
+            'em andamento': 'in progress',
         }
-        if transition not in jira_transitions:
-            logger.error(
-                'Transition "{transition}" not available for {issue_key}. Valid transitions: {jira_transitions}'.format(
-                    transition=transition,
-                    issue_key=self.rawissue.key,
-                    jira_transitions=list(jira_transitions),
-                )
-            )
-            raise Exception("Invalid JIRA transition")
+        
+        normalized_status = status_mapping.get(current_status, current_status)
 
-        self.j.transition_issue(self.rawissue, jira_transitions[transition])
+        if normalized_status == target_status:
+            return
+    
+        transitions = self.j.transitions(self.rawissue)
+        available_transitions = {t["name"]: t["id"] for t in transitions}
 
-        action = "Reopening" if transition == self.reopenstate else "Closing"
-
-        logger.info(
-            "{action} issue {issue_key}".format(
-                action=action, issue_key=self.rawissue.key
-            )
-        )
-
+        if transition not in available_transitions:
+            return
+    
+        try:
+            self.j.transition_issue(self.rawissue, available_transitions[transition])
+            action = "Reopening" if transition == self.reopenstate else "Changing status to"
+            logger.info("{action} issue {issue_key}".format(action=action, issue_key=self.rawissue.key))
+        except Exception as e:
+            logger.error("Error transitioning issue {0}: {1}".format(self.rawissue.key, e))
+    
     def persist_labels(self, labels):
         if labels:
             self.rawissue.update(fields={"labels": self.labels})

@@ -486,6 +486,18 @@ class AlertBase:
                 
         return valid_assignees
 
+    def get_cve(self):
+        cve = self.json.get("rule", {}).get("id", "")
+        if not cve:
+            return None
+        
+        cve = cve.replace(" ", "-")
+        
+        if cve.upper().startswith("CVE-"):
+            return cve
+        else:
+            return None
+
 class Alert(AlertBase):
     def __init__(self, github_repo, json):
         AlertBase.__init__(self, github_repo, json)
