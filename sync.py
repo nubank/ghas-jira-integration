@@ -74,7 +74,6 @@ class Sync:
                 alert.get_team_members(),
                 alert=alert,
                 alert.get_cve()
-                )
 
             if newissue is None:
                 return None    
