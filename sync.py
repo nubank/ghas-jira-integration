@@ -73,6 +73,7 @@ class Sync:
                 alert.get_responsible_teams(),
                 alert.get_team_members(),
                 alert.get_cve(),
+                alert=alert
             )
             
             if newissue is None:
