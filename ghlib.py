@@ -617,6 +617,9 @@ class Secret(AlertBase):
         )
 
     def get_location(self):
+        locations = self.fetch_locations()
+        if locations and len(locations) > 0:
+            return locations[0].get("details", {}).get("path", None)
         return None
 
     def do_adjust_state(self, target_state):
@@ -649,3 +652,19 @@ class Secret(AlertBase):
     def get_tool_name(self):
         return "GitHub - Secret Scanning"
     
+    def fetch_locations(self):
+        try:
+            resp = requests.get(
+                "{api_url}/repos/{repo_id}/secret-scanning/alerts/{alert_num}/locations".format(
+                    api_url=self.gh.url,
+                    repo_id=self.github_repo.repo_id,
+                    alert_num=self.number(),
+                ),
+                headers=self.gh.default_headers(),
+                timeout=util.REQUEST_TIMEOUT,
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            logger.error(f"Failed to fetch locations for secret alert {self.number()} in {self.github_repo.repo_id}: {e}")
+            return []    

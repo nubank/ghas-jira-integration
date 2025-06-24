@@ -58,6 +58,13 @@ ALERT_KEY={alert_key}
 SECRET_DESC_TEMPLATE = """
 Secret of type {short_desc} found in the repository.
 
+*Responsible Teams*
+{responsible_teams}
+This information was automatically collected from the repository's codeowners file, indicating the possible team responsible.
+
+*Team Members*
+{assignee}
+
 *More details*
 {alert_url}
 
@@ -304,12 +311,6 @@ class JiraProject:
                 continue
 
         jira_issue = JiraIssue(self, raw)
-
-        #logger.info(
-        #    "Created issue {issue_key} for alert {alert_num} in {repo_id}.".format(
-        #        issue_key=raw.key, alert_num=alert_num, repo_id=repo_id
-        #    )
-        #)
         
         logger.info(
             "Created issue {issue_key} for {alert_type} {alert_num} in {repo_id}.".format(
