@@ -223,7 +223,8 @@ class JiraProject:
         location,
         responsible_teams,
         all_members,
-        cve
+        cve,
+        alert
     ):
 
         template = SECRET_DESC_TEMPLATE if alert_type == "Secret" else DESC_TEMPLATE
