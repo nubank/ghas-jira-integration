@@ -236,7 +236,8 @@ class JiraProject:
 
         template = SECRET_DESC_TEMPLATE if alert_type == "Secret" else DESC_TEMPLATE
         assignee_value = alert.get_valid_assignees() if alert else None
-        formatted_assignees = ", ".join(assignee_value) if assignee_value else "No assignee found"
+        unique_assignees = list(dict.fromkeys(assignee_value)) if assignee_value else None
+        formatted_assignees = ", ".join(unique_assignees) if unique_assignees else "No assignee found"
 
         summary = (
             f"{short_desc} secret found in mini-meta-repo" 
@@ -246,6 +247,7 @@ class JiraProject:
         default_tool_name = 'GitHub - Secret Scanning'
         default_severity = 'High'
         cve_field = [cve] if cve is not None else []
+        language = language if language else None
 
         raw = self.j.create_issue(
             project=self.projectkey,
