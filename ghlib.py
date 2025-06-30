@@ -419,17 +419,18 @@ class AlertBase:
     def get_responsible_teams(self):
         file_path = self.get_location()
         if not file_path:
-            return []
+            return "mmr-team"
             
         teams = self.github_repo.parse_codeowners_for_path(file_path)
         
-        # Clean team names by removing organization prefix
+        if not teams:  
+            return "mmr-team"
+
         cleaned_teams = [
             team.replace('@nubank/', '') 
             for team in teams
         ]
         
-        # Join team names with comma and space
         return ", ".join(cleaned_teams) if cleaned_teams else ""
     
     def get_severity(self):

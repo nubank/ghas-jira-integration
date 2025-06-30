@@ -244,8 +244,7 @@ class JiraProject:
             if alert_type == "Secret" 
             else long_desc
         )
-        default_tool_name = 'GitHub - Secret Scanning'
-        default_severity = 'High'
+        
         cve_field = [cve] if cve is not None else []
         language = language if language else None
 
