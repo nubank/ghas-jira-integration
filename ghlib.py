@@ -298,7 +298,6 @@ class GHRepository:
         return original_pattern, score
 
     def parse_codeowners_for_path(self, file_path):
-        
         content = self.fetch_codeowners()
         if not content:
             return []
@@ -307,6 +306,10 @@ class GHRepository:
 
         for line in content.splitlines():
             line = line.strip()
+
+            if not line or line.startswith('#'):
+                continue
+
             parts = line.split()
             if len(parts) < 2:
                 continue
@@ -321,6 +324,9 @@ class GHRepository:
                 "score": full_score_linha,
                 "owners": owners
             }
+
+        if not all_scores_from_each_line:
+            return []
 
         sorted_scores = sorted(all_scores_from_each_line.items(), key=lambda x: x[1]['score'], reverse=True)    
         owners = sorted_scores[0][1]['owners']
@@ -419,7 +425,7 @@ class AlertBase:
     def get_responsible_teams(self):
         file_path = self.get_location()
         if not file_path:
-            return "mmr-team"
+            return []
             
         teams = self.github_repo.parse_codeowners_for_path(file_path)
         
