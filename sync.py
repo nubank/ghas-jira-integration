@@ -51,9 +51,24 @@ class Sync:
                 i.delete()
             return None
 
-        # make sure that each alert has at least
-        # one issue associated with it
-        if len(issues) == 0:
+        # Check if this is a reopened alert - if the alert is open but existing issues are closed
+        create_new_ticket = False
+        if alert.get_state() is True and len(issues) > 0:
+            for i in issues:
+                current_status = i.rawissue.fields.status.name.strip().lower()
+                if current_status in ['done', 'concluído', self.jira.endstate.lower()]:
+                    # This is a reopened alert - create a new ticket without deleting existing ones
+                    logger.info(
+                        "Alert {alert_num} in {repo_id} was reopened. Creating new ticket while preserving existing ones.".format(
+                            alert_num=alert.number(),
+                            repo_id=alert.github_repo.repo_id,
+                        )
+                    )
+                    create_new_ticket = True
+                    break
+
+        # Create a new issue if there are no issues or if the alert was reopened
+        if len(issues) == 0 or create_new_ticket:
             newissue = self.jira.create_issue(
                 alert.github_repo.repo_id,
                 alert.short_desc(),
@@ -80,14 +95,35 @@ class Sync:
                 return None    
                  
             newissue.adjust_state(alert.get_state())
+            
+            # If we created a new ticket for a reopened alert, we're done here
+            if create_new_ticket:
+                return alert.get_state()
+                
             return alert.get_state()
 
         # make sure that each alert has at max
         # one issue associated with it
         if len(issues) > 1:
-            issues.sort(key=lambda i: i.id())
-            for i in issues[1:]:
-                i.delete()
+            # Sort issues, keeping the newest active ones first (sorted by ID in descending order)
+            issues.sort(key=lambda i: -i.id())
+            
+            # Filter for open issues first
+            open_issues = [i for i in issues if i.get_state()]
+            
+            # If there are open issues, keep the newest one
+            if open_issues:
+                keep_issue = open_issues[0]
+            else:
+                # Otherwise keep the newest issue (even if closed)
+                keep_issue = issues[0]
+                
+            # Delete all other issues except the one we're keeping
+            for i in issues:
+                if i.id() != keep_issue.id():
+                    i.delete()
+                    
+            issues = [keep_issue]
 
         issue = issues[0]
 
