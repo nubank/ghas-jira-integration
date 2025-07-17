@@ -106,7 +106,7 @@ class Sync:
         # one issue associated with it
         if len(issues) > 1:
             # Sort issues, keeping the newest active ones first (sorted by ID in descending order)
-            issues.sort(key=lambda i: -i.id())
+            issues.sort(key=lambda i: -int(i.id()))
             
             # Filter for open issues first
             open_issues = [i for i in issues if i.get_state()]
