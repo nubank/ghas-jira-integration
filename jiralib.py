@@ -313,16 +313,6 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
         
-        # Check if the issue has an assignee after the assignment attempts
-        issue_data = self.j.issue(raw.key)
-        if hasattr(issue_data.fields, 'assignee') and issue_data.fields.assignee is not None:
-            # If we have an assignee, transition to "Waiting for Fix"
-            transitions = self.j.transitions(raw)
-            available_transitions = {t["name"]: t["id"] for t in transitions}
-            if "Waiting for Fix" in available_transitions:
-                self.j.transition_issue(raw, available_transitions["Waiting Fix"])
-                logger.info(f"Transitioned issue {raw.key} to 'Waiting for Fix' due to assigned assignee")
-        
         logger.info(
             "Created issue {issue_key} for {alert_type} {alert_num} in {repo_id}.".format(
                 issue_key=raw.key,
@@ -385,17 +375,11 @@ class JiraIssue:
     def get_state(self):
         return self.parse_state(self.rawissue.fields.status.name)
 
-    def has_assignee(self):
-        return hasattr(self.rawissue.fields, 'assignee') and self.rawissue.fields.assignee is not None
-        
     def adjust_state(self, state):
         if state: 
             current_status = self.rawissue.fields.status.name.strip().lower()
             if current_status == 'done':
                 self.transition("Reopen")
-            elif self.has_assignee() and current_status.lower() == 'to do':
-                # If issue has an assignee and is in 'To Do', move it to 'Waiting for Fix'
-                self.transition("Waiting Fix")
             else:
                 self.transition(self.reopenstate)
         else:

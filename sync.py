@@ -141,11 +141,6 @@ class Sync:
             # alerts cannot be transitioned to "open"
             issue.adjust_state(alert.get_state())
             issue.persist_labels(self.labels)
-            
-            # Check if the issue needs to be moved to "Waiting for Fix" based on assignee
-            if alert.get_state() and issue.has_assignee() and issue.rawissue.fields.status.name.strip().lower() == 'to do':
-                issue.transition("Waiting for Fix")
-                
             return alert.get_state()
         else:
             # The user treats JIRA as the source of truth
