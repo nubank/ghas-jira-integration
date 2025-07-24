@@ -288,7 +288,14 @@ class JiraProject:
 
         valid_assignees = alert.get_valid_assignees()
 
-        for assignee_name in valid_assignees:
+        # Try to assign maintainers first, then fall back to regular members
+        prioritized_assignees = alert.get_prioritized_assignees()
+        maintainers = prioritized_assignees.get('maintainers', [])
+        members = prioritized_assignees.get('members', [])
+        
+        # Try maintainers first
+        assigned = False
+        for assignee_name in maintainers:
             try:
                 assignable_users = self.j._get_json(
                     'user/assignable/search',
@@ -305,11 +312,47 @@ class JiraProject:
                         f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                         json={'accountId': account_id}
                     )
-                    break  
+                    logger.info(f"Assigned maintainer {assignee_name} to issue {raw.key}")
+                    assigned = True
+                    break
                 else:
+                    logger.debug(f"Maintainer {assignee_name} not found in assignable users for project {self.projectkey}")
                     continue
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Failed to assign maintainer {assignee_name} to issue {raw.key}: {e}")
                 continue
+
+        # If no maintainer could be assigned, try regular members
+        if not assigned:
+            for assignee_name in members:
+                try:
+                    assignable_users = self.j._get_json(
+                        'user/assignable/search',
+                        params={
+                            'project': self.projectkey,
+                            'query': assignee_name,
+                            'maxResults': 1
+                        }
+                    )
+                    
+                    if assignable_users and len(assignable_users) > 0:
+                        account_id = assignable_users[0]['accountId']
+                        self.j._session.put(
+                            f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
+                            json={'accountId': account_id}
+                        )
+                        logger.info(f"Assigned team member {assignee_name} to issue {raw.key}")
+                        assigned = True
+                        break
+                    else:
+                        logger.debug(f"Team member {assignee_name} not found in assignable users for project {self.projectkey}")
+                        continue
+                except Exception as e:
+                    logger.warning(f"Failed to assign team member {assignee_name} to issue {raw.key}: {e}")
+                    continue
+        
+        if not assigned:
+            logger.warning(f"Could not assign any team member to issue {raw.key}")
 
         jira_issue = JiraIssue(self, raw)
         

@@ -137,6 +137,49 @@ class GitHub:
             logger.error(f"Failed to get team members for {team_slug}: {e}")
             return []
 
+    def get_team_members_with_roles(self, org, team_slug):
+        """Get members of a GitHub team with their roles (maintainer/member)"""
+        try:
+            resp = requests.get(
+                f"{self.url}/orgs/{org}/teams/{team_slug}/members?role=all",
+                headers=self.default_headers(),
+                timeout=util.REQUEST_TIMEOUT
+            )
+            resp.raise_for_status()
+            members = resp.json()
+            
+            # Get detailed role information for each member
+            members_with_roles = []
+            for member in members:
+                try:
+                    # Get membership details to determine role
+                    membership_resp = requests.get(
+                        f"{self.url}/orgs/{org}/teams/{team_slug}/memberships/{member['login']}",
+                        headers=self.default_headers(),
+                        timeout=util.REQUEST_TIMEOUT
+                    )
+                    membership_resp.raise_for_status()
+                    membership_data = membership_resp.json()
+                    
+                    member_info = {
+                        'login': member['login'],
+                        'role': membership_data.get('role', 'member')  # 'maintainer' or 'member'
+                    }
+                    members_with_roles.append(member_info)
+                except HTTPError as e:
+                    logger.warning(f"Failed to get role for member {member['login']} in team {team_slug}: {e}")
+                    # Default to member role if we can't get the specific role
+                    member_info = {
+                        'login': member['login'],
+                        'role': 'member'
+                    }
+                    members_with_roles.append(member_info)
+            
+            return members_with_roles
+        except HTTPError as e:
+            logger.error(f"Failed to get team members with roles for {team_slug}: {e}")
+            return []
+
     def get_user_details(self, username):
         try:
             resp = requests.get(
@@ -482,16 +525,73 @@ class AlertBase:
         
         return member_logins
 
+    def get_team_members_with_roles(self):
+        """Get team members organized by role (maintainers first, then members)"""
+        teams = self.get_responsible_teams()
+        if not teams:
+            return {'maintainers': [], 'members': []}
+            
+        org = self.github_repo.repo_id.split('/')[0]
+        
+        maintainers = []
+        members = []
+        
+        for team in teams.split(', '):
+            team_members = self.gh.get_team_members_with_roles(org, team)
+            for member in team_members:
+                login = member.get('login')
+                role = member.get('role', 'member')
+                
+                if login:
+                    if role == 'maintainer':
+                        if login not in maintainers:
+                            maintainers.append(login)
+                    else:
+                        if login not in members:
+                            members.append(login)
+        
+        return {'maintainers': maintainers, 'members': members}
+
     def get_valid_assignees(self):
-        member_logins = self.get_team_members()
+        """Get valid assignees with maintainers prioritized first"""
+        team_members = self.get_team_members_with_roles()
+        maintainers = team_members.get('maintainers', [])
+        members = team_members.get('members', [])
+        
+        # Prioritize maintainers first, then regular members
+        prioritized_logins = maintainers + members
+        
         valid_assignees = []
         
-        for login in member_logins:
+        for login in prioritized_logins:
             user_details = self.gh.get_user_details(login)
             if user_details and user_details.get('name'):
                 valid_assignees.append(user_details['name'])
                 
         return valid_assignees
+
+    def get_prioritized_assignees(self):
+        """Get assignees separated by role for more granular assignment logic"""
+        team_members = self.get_team_members_with_roles()
+        maintainers = team_members.get('maintainers', [])
+        members = team_members.get('members', [])
+        
+        valid_maintainers = []
+        valid_members = []
+        
+        # Process maintainers first
+        for login in maintainers:
+            user_details = self.gh.get_user_details(login)
+            if user_details and user_details.get('name'):
+                valid_maintainers.append(user_details['name'])
+        
+        # Process regular members
+        for login in members:
+            user_details = self.gh.get_user_details(login)
+            if user_details and user_details.get('name'):
+                valid_members.append(user_details['name'])
+                
+        return {'maintainers': valid_maintainers, 'members': valid_members}
 
     def get_cve(self):
         cve = self.json.get("rule", {}).get("id", "")
