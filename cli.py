@@ -306,15 +306,9 @@ def main():
     # update-assignees
     update_assignees_parser = subparsers.add_parser(
         "update-assignees",
-        parents=[credential_base],
+        parents=[credential_base, issue_state_base],
         help="Update assignees for existing JIRA issues to prioritize maintainers",
         description="Update assignees for existing JIRA issues to prioritize maintainers",
-    )
-    update_assignees_parser.add_argument(
-        "--gh-org", help="GitHub organization", required=True
-    )
-    update_assignees_parser.add_argument(
-        "--gh-repo", help="GitHub repository", required=True
     )
     update_assignees_parser.set_defaults(func=update_assignees)
 
