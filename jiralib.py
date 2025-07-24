@@ -101,8 +101,8 @@ class Jira:
     def auth(self):
         return self.user, self.token
 
-    def getProject(self, projectkey, endstate, reopenstate, labels, auto_transition=True, update_existing_assignees=False):
-        return JiraProject(self, projectkey, endstate, reopenstate, labels, auto_transition, update_existing_assignees)
+    def getProject(self, projectkey, endstate, reopenstate, labels, auto_transition=True):
+        return JiraProject(self, projectkey, endstate, reopenstate, labels, auto_transition)
 
     def list_hooks(self):
         resp = requests.get(
@@ -147,7 +147,7 @@ class Jira:
 
 
 class JiraProject:
-    def __init__(self, jira, projectkey, endstate, reopenstate, labels, auto_transition=True, update_existing_assignees=False):
+    def __init__(self, jira, projectkey, endstate, reopenstate, labels, auto_transition=True):
         self.jira = jira
         self.labels = labels.split(",") if labels else []
         self.projectkey = projectkey
@@ -155,7 +155,6 @@ class JiraProject:
         self.endstate = endstate
         self.reopenstate = reopenstate
         self.auto_transition = auto_transition  # Enable/disable automatic status transitions
-        self.update_existing_assignees = update_existing_assignees  # Enable/disable updating existing issues' assignees
 
     def get_state_issue(self, issue_key="-"):
         if issue_key != "-":
