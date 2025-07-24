@@ -101,8 +101,8 @@ class Jira:
     def auth(self):
         return self.user, self.token
 
-    def getProject(self, projectkey, endstate, reopenstate, labels):
-        return JiraProject(self, projectkey, endstate, reopenstate, labels)
+    def getProject(self, projectkey, endstate, reopenstate, labels, auto_transition=True):
+        return JiraProject(self, projectkey, endstate, reopenstate, labels, auto_transition)
 
     def list_hooks(self):
         resp = requests.get(
@@ -147,13 +147,14 @@ class Jira:
 
 
 class JiraProject:
-    def __init__(self, jira, projectkey, endstate, reopenstate, labels):
+    def __init__(self, jira, projectkey, endstate, reopenstate, labels, auto_transition=True):
         self.jira = jira
         self.labels = labels.split(",") if labels else []
         self.projectkey = projectkey
         self.j = self.jira.j
         self.endstate = endstate
         self.reopenstate = reopenstate
+        self.auto_transition = auto_transition  # Enable/disable automatic status transitions
 
     def get_state_issue(self, issue_key="-"):
         if issue_key != "-":
@@ -356,6 +357,10 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
         
+        # Update status based on assignment result
+        if assigned:
+            jira_issue.update_status_based_on_assignee()
+        
         logger.info(
             "Created issue {issue_key} for {alert_type} {alert_num} in {repo_id}.".format(
                 issue_key=raw.key,
@@ -499,6 +504,10 @@ class JiraIssue:
                     logger.warning(f"Failed to assign member {assignee_name} to issue {self.key()}: {e}")
                     continue
         
+        # Update status based on assignment result
+        if assigned:
+            self.update_status_based_on_assignee()
+        
         if not assigned:
             logger.warning(f"Could not update assignee for issue {self.key()}")
             
@@ -529,6 +538,108 @@ class JiraIssue:
         else:
             logger.info(f"Issue {self.key()} assigned to non-maintainer {current_assignee}, updating to prioritize maintainers...")
             return self.update_assignee_with_priority(alert)
+
+    def remove_assignee(self):
+        """Remove the assignee from the issue and update status to 'To Do'"""
+        try:
+            # Remove assignee
+            self.j._session.put(
+                f"{self.j._options['server']}/rest/api/2/issue/{self.key()}/assignee",
+                json={'accountId': None}
+            )
+            logger.info(f"Removed assignee from issue {self.key()}")
+            
+            # Update status to reflect unassignment
+            self.update_status_based_on_assignee()
+            
+            return True
+        except Exception as e:
+            logger.error(f"Failed to remove assignee from issue {self.key()}: {e}")
+            return False
+
+    def update_status_based_on_assignee(self):
+        """Update issue status based on whether it has an assignee"""
+        # Check if auto-transition is enabled
+        if not self.project.auto_transition:
+            logger.debug(f"Auto-transition disabled for project {self.project.projectkey}, skipping status update for issue {self.key()}")
+            return
+            
+        try:
+            # Check if issue has an assignee
+            has_assignee = (hasattr(self.rawissue.fields, 'assignee') and 
+                          self.rawissue.fields.assignee is not None)
+            
+            current_status = self.rawissue.fields.status.name.strip().lower()
+            
+            # Status mapping for normalization
+            status_mapping = {
+                'concluído': 'done',
+                'a fazer': 'to do',
+                'em andamento': 'in progress',
+                'waiting fix': 'waiting fix',
+                'aguardando correção': 'waiting fix'
+            }
+            
+            normalized_status = status_mapping.get(current_status, current_status)
+            
+            # Determine target status based on assignee
+            if has_assignee:
+                # If assigned but still in "To Do", move to "Waiting Fix"
+                if normalized_status == 'to do':
+                    self.transition_to_waiting_fix()
+                    logger.info(f"Issue {self.key()} moved to 'Waiting Fix' status after assignment")
+            else:
+                # If unassigned but in "Waiting Fix", move back to "To Do"
+                if normalized_status == 'waiting fix':
+                    self.transition_to_todo()
+                    logger.info(f"Issue {self.key()} moved back to 'To Do' status after unassignment")
+                    
+        except Exception as e:
+            logger.warning(f"Failed to update status for issue {self.key()} based on assignee: {e}")
+
+    def transition_to_waiting_fix(self):
+        """Transition issue to 'Waiting Fix' status"""
+        possible_transitions = ['Waiting Fix', 'waiting fix', 'Aguardando Correção', 'aguardando correção']
+        
+        try:
+            transitions = self.j.transitions(self.rawissue)
+            available_transitions = {t["name"]: t["id"] for t in transitions}
+            
+            # Try to find a matching transition
+            for transition_name in possible_transitions:
+                if transition_name in available_transitions:
+                    self.j.transition_issue(self.rawissue, available_transitions[transition_name])
+                    logger.info(f"Transitioned issue {self.key()} to '{transition_name}'")
+                    return True
+                    
+            logger.warning(f"No 'Waiting Fix' transition available for issue {self.key()}. Available transitions: {list(available_transitions.keys())}")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error transitioning issue {self.key()} to 'Waiting Fix': {e}")
+            return False
+
+    def transition_to_todo(self):
+        """Transition issue to 'To Do' status"""
+        possible_transitions = ['To Do', 'to do', 'A Fazer', 'a fazer', 'Todo']
+        
+        try:
+            transitions = self.j.transitions(self.rawissue)
+            available_transitions = {t["name"]: t["id"] for t in transitions}
+            
+            # Try to find a matching transition
+            for transition_name in possible_transitions:
+                if transition_name in available_transitions:
+                    self.j.transition_issue(self.rawissue, available_transitions[transition_name])
+                    logger.info(f"Transitioned issue {self.key()} to '{transition_name}'")
+                    return True
+                    
+            logger.warning(f"No 'To Do' transition available for issue {self.key()}. Available transitions: {list(available_transitions.keys())}")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error transitioning issue {self.key()} to 'To Do': {e}")
+            return False
 
     def get_state(self):
         return self.parse_state(self.rawissue.fields.status.name)

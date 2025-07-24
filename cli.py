@@ -53,9 +53,19 @@ def serve(args):
 
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
+    
+    # Determine auto-transition setting
+    auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    
     s = Sync(
         github,
-        jira.getProject(args.jira_project, args.jira_labels),
+        jira.getProject(
+            args.jira_project,
+            args.issue_end_state or "Done",
+            args.issue_reopen_state or "To Do", 
+            args.jira_labels or "",
+            auto_transition,
+        ),
         direction=direction_str_to_num(args.direction),
     )
     server.run_server(s, args.secret, port=args.port)
@@ -82,11 +92,16 @@ def sync(args):
 
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
+    
+    # Determine auto-transition setting
+    auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    
     jira_project = jira.getProject(
         args.jira_project,
         args.issue_end_state,
         args.issue_reopen_state,
         args.jira_labels,
+        auto_transition,
     )
     repo_id = args.gh_org + "/" + args.gh_repo
 
@@ -130,11 +145,16 @@ def update_assignees(args):
     # create connections
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
+    
+    # Determine auto-transition setting
+    auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    
     jira_project = jira.getProject(
         args.jira_project,
         args.issue_end_state or "Done",
         args.issue_reopen_state or "To Do",
         args.jira_labels or "",
+        auto_transition,
     )
 
     # Update assignees for existing issues
@@ -264,6 +284,18 @@ def main():
         "--issue-reopen-state",
         help="Custom reopen state (e.g. In Progress) To Do by default",
         default="To Do",
+    )
+    issue_state_base.add_argument(
+        "--auto-transition",
+        help="Enable automatic status transitions based on assignee (To Do <-> Waiting Fix)",
+        action="store_true",
+        default=True,
+    )
+    issue_state_base.add_argument(
+        "--no-auto-transition",
+        help="Disable automatic status transitions based on assignee",
+        action="store_true",
+        default=False,
     )
 
     parser = argparse.ArgumentParser(prog="gh2jira")
