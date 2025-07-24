@@ -127,6 +127,10 @@ class Sync:
 
         issue = issues[0]
 
+        # Update assignee for existing issues to ensure maintainers are prioritized
+        if alert:
+            issue.update_assignee_if_needed(alert)
+
         # make sure alert and issue are in the same state
         if self.direction & DIRECTION_G2J and self.direction & DIRECTION_J2G:
             d = in_direction
@@ -187,3 +191,47 @@ class Sync:
                 states.pop(akey, None)
             else:
                 states[akey] = new_state
+
+    def update_existing_assignees(self, repo_id):
+        """Update assignees for all existing issues in a repository to prioritize maintainers"""
+        logger.info(
+            "Updating assignees for existing issues in repository {repo_id}...".format(repo_id=repo_id)
+        )
+
+        repo = self.github.getRepository(repo_id)
+        updated_count = 0
+        failed_count = 0
+
+        # Get all existing issues for this repository
+        for issue in self.jira.fetch_issues(repo.get_key()):
+            try:
+                # Parse the alert info from the issue
+                repo_id_from_issue, alert_num, _, _, _ = issue.get_alert_info()
+                
+                if repo_id_from_issue and alert_num:
+                    # Get the corresponding alert
+                    alert = repo.get_alert(alert_num)
+                    if alert:
+                        # Update the assignee if needed
+                        if issue.update_assignee_if_needed(alert):
+                            updated_count += 1
+                        else:
+                            failed_count += 1
+                    else:
+                        logger.warning(f"Could not find alert {alert_num} for issue {issue.key()}")
+                        failed_count += 1
+                else:
+                    logger.warning(f"Could not parse alert info from issue {issue.key()}")
+                    failed_count += 1
+                    
+            except Exception as e:
+                logger.error(f"Error updating assignee for issue {issue.key()}: {e}")
+                failed_count += 1
+
+        logger.info(
+            "Finished updating assignees for repository {repo_id}. Updated: {updated}, Failed: {failed}".format(
+                repo_id=repo_id, updated=updated_count, failed=failed_count
+            )
+        )
+        
+        return updated_count, failed_count

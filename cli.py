@@ -109,6 +109,43 @@ def sync(args):
         jira_project.save_repo_state(repo_id, state, args.state_issue)
 
 
+def update_assignees(args):
+    if not args.gh_url or not args.jira_url:
+        fail("Both GitHub and JIRA URL have to be specified!")
+
+    if not args.gh_token:
+        fail("No GitHub token specified!")
+
+    if not args.jira_user or not args.jira_token:
+        fail("No JIRA credentials specified!")
+
+    if not args.jira_project:
+        fail("No JIRA project specified!")
+
+    if not args.gh_org or not args.gh_repo:
+        fail("Both GitHub organization and repository have to be specified!")
+
+    repo_id = args.gh_org + "/" + args.gh_repo
+
+    # create connections
+    github = ghlib.GitHub(args.gh_url, args.gh_token)
+    jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
+    jira_project = jira.getProject(
+        args.jira_project,
+        args.issue_end_state or "Done",
+        args.issue_reopen_state or "To Do",
+        args.jira_labels or "",
+    )
+
+    # Update assignees for existing issues
+    sync = Sync(github, jira_project, DIRECTION_G2J)  # Direction doesn't matter for this operation
+    updated_count, failed_count = sync.update_existing_assignees(repo_id)
+    
+    print(f"Update completed for repository {repo_id}:")
+    print(f"  Successfully updated: {updated_count} issues")
+    print(f"  Failed to update: {failed_count} issues")
+
+
 def check_hooks(args):
     pass
 
@@ -265,6 +302,21 @@ def main():
         default=None,
     )
     sync_parser.set_defaults(func=sync)
+
+    # update-assignees
+    update_assignees_parser = subparsers.add_parser(
+        "update-assignees",
+        parents=[credential_base],
+        help="Update assignees for existing JIRA issues to prioritize maintainers",
+        description="Update assignees for existing JIRA issues to prioritize maintainers",
+    )
+    update_assignees_parser.add_argument(
+        "--gh-org", help="GitHub organization", required=True
+    )
+    update_assignees_parser.add_argument(
+        "--gh-repo", help="GitHub repository", required=True
+    )
+    update_assignees_parser.set_defaults(func=update_assignees)
 
     # hooks
     hooks = subparsers.add_parser(

@@ -415,6 +415,121 @@ class JiraIssue:
         logger.info("Deleting issue {ikey}.".format(ikey=self.key()))
         self.rawissue.delete()
 
+    def update_assignee_with_priority(self, alert):
+        """Update the assignee of an existing issue, prioritizing maintainers"""
+        if not alert:
+            logger.warning(f"No alert provided for updating assignee of issue {self.key()}")
+            return False
+            
+        # Get prioritized assignees (maintainers first, then members)
+        prioritized_assignees = alert.get_prioritized_assignees()
+        maintainers = prioritized_assignees.get('maintainers', [])
+        members = prioritized_assignees.get('members', [])
+        
+        # Get current assignee
+        current_assignee = None
+        if hasattr(self.rawissue.fields, 'assignee') and self.rawissue.fields.assignee:
+            current_assignee = self.rawissue.fields.assignee.displayName
+            
+        logger.info(f"Current assignee for issue {self.key()}: {current_assignee}")
+        
+        # Try maintainers first
+        assigned = False
+        for assignee_name in maintainers:
+            if current_assignee == assignee_name:
+                logger.info(f"Issue {self.key()} already assigned to maintainer {assignee_name}")
+                return True
+                
+            try:
+                assignable_users = self.j._get_json(
+                    'user/assignable/search',
+                    params={
+                        'project': self.project.projectkey,
+                        'query': assignee_name,
+                        'maxResults': 1
+                    }
+                )
+                
+                if assignable_users and len(assignable_users) > 0:
+                    account_id = assignable_users[0]['accountId']
+                    self.j._session.put(
+                        f"{self.j._options['server']}/rest/api/2/issue/{self.key()}/assignee",
+                        json={'accountId': account_id}
+                    )
+                    logger.info(f"Updated issue {self.key()} assignee to maintainer {assignee_name}")
+                    assigned = True
+                    break
+                else:
+                    logger.debug(f"Maintainer {assignee_name} not found in assignable users for project {self.project.projectkey}")
+                    continue
+            except Exception as e:
+                logger.warning(f"Failed to assign maintainer {assignee_name} to issue {self.key()}: {e}")
+                continue
+
+        # If no maintainer could be assigned, try regular members
+        if not assigned:
+            for assignee_name in members:
+                if current_assignee == assignee_name:
+                    logger.info(f"Issue {self.key()} already assigned to member {assignee_name}")
+                    return True
+                    
+                try:
+                    assignable_users = self.j._get_json(
+                        'user/assignable/search',
+                        params={
+                            'project': self.project.projectkey,
+                            'query': assignee_name,
+                            'maxResults': 1
+                        }
+                    )
+                    
+                    if assignable_users and len(assignable_users) > 0:
+                        account_id = assignable_users[0]['accountId']
+                        self.j._session.put(
+                            f"{self.j._options['server']}/rest/api/2/issue/{self.key()}/assignee",
+                            json={'accountId': account_id}
+                        )
+                        logger.info(f"Updated issue {self.key()} assignee to member {assignee_name}")
+                        assigned = True
+                        break
+                    else:
+                        logger.debug(f"Member {assignee_name} not found in assignable users for project {self.project.projectkey}")
+                        continue
+                except Exception as e:
+                    logger.warning(f"Failed to assign member {assignee_name} to issue {self.key()}: {e}")
+                    continue
+        
+        if not assigned:
+            logger.warning(f"Could not update assignee for issue {self.key()}")
+            
+        return assigned
+
+    def update_assignee_if_needed(self, alert):
+        """Update assignee only if current assignee is not a maintainer"""
+        if not alert:
+            return False
+            
+        # Get current assignee
+        current_assignee = None
+        if hasattr(self.rawissue.fields, 'assignee') and self.rawissue.fields.assignee:
+            current_assignee = self.rawissue.fields.assignee.displayName
+            
+        # If no current assignee, definitely update
+        if not current_assignee:
+            logger.info(f"Issue {self.key()} has no assignee, updating...")
+            return self.update_assignee_with_priority(alert)
+            
+        # Check if current assignee is a maintainer
+        prioritized_assignees = alert.get_prioritized_assignees()
+        maintainers = prioritized_assignees.get('maintainers', [])
+        
+        if current_assignee in maintainers:
+            logger.info(f"Issue {self.key()} already assigned to maintainer {current_assignee}, no update needed")
+            return True
+        else:
+            logger.info(f"Issue {self.key()} assigned to non-maintainer {current_assignee}, updating to prioritize maintainers...")
+            return self.update_assignee_with_priority(alert)
+
     def get_state(self):
         return self.parse_state(self.rawissue.fields.status.name)
 
