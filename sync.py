@@ -128,8 +128,12 @@ class Sync:
         issue = issues[0]
 
         # Update assignee for existing issues to ensure maintainers are prioritized
-        if alert:
+        # Only if the feature flag is enabled
+        if alert and self.jira.update_existing_assignees:
+            logger.info(f"Updating existing assignee for issue {issue.key()} (feature enabled)")
             issue.update_assignee_if_needed(alert)
+        elif alert:
+            logger.debug(f"Skipping assignee update for existing issue {issue.key()} (feature disabled)")
 
         # make sure alert and issue are in the same state
         if self.direction & DIRECTION_G2J and self.direction & DIRECTION_J2G:

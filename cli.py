@@ -35,6 +35,21 @@ def direction_str_to_num(dstr):
         fail('Unknown direction argument "{direction}"!'.format(direction=dstr))
 
 
+def get_feature_flags(args):
+    """Extract feature flags from command line arguments"""
+    # Auto-transition setting
+    auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    
+    # Update existing assignees setting
+    update_existing_assignees = False
+    if hasattr(args, 'update_existing_assignees') and args.update_existing_assignees:
+        update_existing_assignees = True
+    elif hasattr(args, 'no_update_existing_assignees') and args.no_update_existing_assignees:
+        update_existing_assignees = False
+    
+    return auto_transition, update_existing_assignees
+
+
 def serve(args):
     if not args.gh_url or not args.jira_url:
         fail("Both GitHub and JIRA URL have to be specified!")
@@ -54,8 +69,8 @@ def serve(args):
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
     
-    # Determine auto-transition setting
-    auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    # Get feature flags
+    auto_transition, update_existing_assignees = get_feature_flags(args)
     
     s = Sync(
         github,
@@ -65,6 +80,7 @@ def serve(args):
             args.issue_reopen_state or "To Do", 
             args.jira_labels or "",
             auto_transition,
+            update_existing_assignees,
         ),
         direction=direction_str_to_num(args.direction),
     )
@@ -93,8 +109,8 @@ def sync(args):
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
     
-    # Determine auto-transition setting
-    auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    # Get feature flags
+    auto_transition, update_existing_assignees = get_feature_flags(args)
     
     jira_project = jira.getProject(
         args.jira_project,
@@ -102,6 +118,7 @@ def sync(args):
         args.issue_reopen_state,
         args.jira_labels,
         auto_transition,
+        update_existing_assignees,
     )
     repo_id = args.gh_org + "/" + args.gh_repo
 
@@ -146,8 +163,9 @@ def update_assignees(args):
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
     
-    # Determine auto-transition setting
-    auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    # Get feature flags (note: update_assignees command always enables updating existing assignees)
+    auto_transition, _ = get_feature_flags(args)
+    update_existing_assignees = True  # This command specifically updates existing assignees
     
     jira_project = jira.getProject(
         args.jira_project,
@@ -155,6 +173,7 @@ def update_assignees(args):
         args.issue_reopen_state or "To Do",
         args.jira_labels or "",
         auto_transition,
+        update_existing_assignees,
     )
 
     # Update assignees for existing issues
@@ -294,6 +313,18 @@ def main():
     issue_state_base.add_argument(
         "--no-auto-transition",
         help="Disable automatic status transitions based on assignee",
+        action="store_true",
+        default=False,
+    )
+    issue_state_base.add_argument(
+        "--update-existing-assignees",
+        help="Enable updating assignees for existing issues during sync operations",
+        action="store_true",
+        default=False,
+    )
+    issue_state_base.add_argument(
+        "--no-update-existing-assignees",
+        help="Disable updating assignees for existing issues during sync operations",
         action="store_true",
         default=False,
     )
