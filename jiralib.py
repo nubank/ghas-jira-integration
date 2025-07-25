@@ -4,6 +4,7 @@ import util
 import logging
 import requests
 import json
+import time
 
 # JIRA Webhook events
 UPDATE_EVENT = "jira:issue_updated"
@@ -355,7 +356,17 @@ class JiraProject:
         if not assigned:
             logger.warning(f"Could not assign any team member to issue {raw.key}")
 
+        # Refresh the issue to ensure we have the latest assignee information
+        # Add a small delay to allow Jira to process the assignment
+        time.sleep(0.5)  # Wait 500ms for Jira to process the assignment
+        
+        raw = self.j.issue(raw.key)
         jira_issue = JiraIssue(self, raw)
+        
+        # Log the current assignee state after refresh for debugging
+        has_assignee_after_refresh = (hasattr(raw.fields, 'assignee') and raw.fields.assignee is not None)
+        assignee_after_refresh = raw.fields.assignee.displayName if has_assignee_after_refresh else "None"
+        logger.info(f"After refresh - Issue {raw.key}: assigned={assigned}, has_assignee={has_assignee_after_refresh}, assignee='{assignee_after_refresh}'")
         
         # Always update status based on current assignee state
         # This ensures that the status is correct regardless of when the assignee was set
@@ -565,6 +576,9 @@ class JiraIssue:
             return
             
         try:
+            # Refresh the issue to get the most current state including assignee
+            self.rawissue = self.j.issue(self.rawissue.key)
+            
             # Check if issue has an assignee
             has_assignee = (hasattr(self.rawissue.fields, 'assignee') and 
                           self.rawissue.fields.assignee is not None)
