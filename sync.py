@@ -11,7 +11,7 @@ DIRECTION_BOTH = 3
 
 # Configuration flag to enable/disable assignee updates for existing issues
 # Can be controlled via environment variable ENABLE_ASSIGNEE_UPDATES (default: false)
-ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'false').lower() in ('true', '1', 'yes')
+ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'true').lower() in ('false', '1', 'yes')
 
 
 class Sync:
