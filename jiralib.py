@@ -357,9 +357,9 @@ class JiraProject:
 
         jira_issue = JiraIssue(self, raw)
         
-        # Update status based on assignment result
-        if assigned:
-            jira_issue.update_status_based_on_assignee()
+        # Always update status based on current assignee state
+        # This ensures that the status is correct regardless of when the assignee was set
+        jira_issue.update_status_based_on_assignee()
         
         logger.info(
             "Created issue {issue_key} for {alert_type} {alert_num} in {repo_id}.".format(
@@ -570,6 +570,9 @@ class JiraIssue:
                           self.rawissue.fields.assignee is not None)
             
             current_status = self.rawissue.fields.status.name.strip().lower()
+            assignee_name = self.rawissue.fields.assignee.displayName if has_assignee else "None"
+            
+            logger.info(f"Issue {self.key()}: current_status='{current_status}', has_assignee={has_assignee}, assignee='{assignee_name}'")
             
             # Status mapping for normalization
             status_mapping = {
@@ -577,39 +580,63 @@ class JiraIssue:
                 'a fazer': 'to do',
                 'em andamento': 'in progress',
                 'waiting fix': 'waiting fix',
-                'aguardando correção': 'waiting fix'
+                'aguardando correção': 'waiting fix',
+                'to do': 'to do',
+                'done': 'done',
+                'in progress': 'in progress'
             }
             
             normalized_status = status_mapping.get(current_status, current_status)
+            logger.info(f"Issue {self.key()}: normalized_status='{normalized_status}'")
             
             # Determine target status based on assignee
             if has_assignee:
                 # If assigned but still in "To Do", move to "Waiting Fix"
                 if normalized_status == 'to do':
-                    self.transition_to_waiting_fix()
-                    logger.info(f"Issue {self.key()} moved to 'Waiting Fix' status after assignment")
+                    logger.info(f"Issue {self.key()} has assignee and is in 'To Do', transitioning to 'Waiting Fix'")
+                    if self.transition_to_waiting_fix():
+                        logger.info(f"Issue {self.key()} successfully moved to 'Waiting Fix' status after assignment")
+                    else:
+                        logger.warning(f"Failed to transition issue {self.key()} to 'Waiting Fix'")
+                else:
+                    logger.info(f"Issue {self.key()} has assignee but is not in 'To Do' status (current: '{normalized_status}'), no transition needed")
             else:
                 # If unassigned but in "Waiting Fix", move back to "To Do"
                 if normalized_status == 'waiting fix':
-                    self.transition_to_todo()
-                    logger.info(f"Issue {self.key()} moved back to 'To Do' status after unassignment")
+                    logger.info(f"Issue {self.key()} has no assignee and is in 'Waiting Fix', transitioning to 'To Do'")
+                    if self.transition_to_todo():
+                        logger.info(f"Issue {self.key()} successfully moved back to 'To Do' status after unassignment")
+                    else:
+                        logger.warning(f"Failed to transition issue {self.key()} to 'To Do'")
+                else:
+                    logger.info(f"Issue {self.key()} has no assignee but is not in 'Waiting Fix' status (current: '{normalized_status}'), no transition needed")
                     
         except Exception as e:
             logger.warning(f"Failed to update status for issue {self.key()} based on assignee: {e}")
 
     def transition_to_waiting_fix(self):
         """Transition issue to 'Waiting Fix' status"""
-        possible_transitions = ['Waiting Fix', 'waiting fix', 'Aguardando Correção', 'aguardando correção']
+        possible_transitions = [
+            'Waiting Fix', 'waiting fix', 'WAITING FIX',
+            'Aguardando Correção', 'aguardando correção', 'AGUARDANDO CORREÇÃO',
+            'Aguardando Correcao', 'aguardando correcao', 'AGUARDANDO CORRECAO',
+            'Waiting for Fix', 'waiting for fix', 'WAITING FOR FIX'
+        ]
         
         try:
+            # Refresh the issue to get current state
+            self.rawissue = self.j.issue(self.rawissue.key)
             transitions = self.j.transitions(self.rawissue)
             available_transitions = {t["name"]: t["id"] for t in transitions}
+            
+            logger.info(f"Available transitions for issue {self.key()}: {list(available_transitions.keys())}")
             
             # Try to find a matching transition
             for transition_name in possible_transitions:
                 if transition_name in available_transitions:
+                    logger.info(f"Found matching transition '{transition_name}' for issue {self.key()}")
                     self.j.transition_issue(self.rawissue, available_transitions[transition_name])
-                    logger.info(f"Transitioned issue {self.key()} to '{transition_name}'")
+                    logger.info(f"Successfully transitioned issue {self.key()} to '{transition_name}'")
                     return True
                     
             logger.warning(f"No 'Waiting Fix' transition available for issue {self.key()}. Available transitions: {list(available_transitions.keys())}")
@@ -621,17 +648,27 @@ class JiraIssue:
 
     def transition_to_todo(self):
         """Transition issue to 'To Do' status"""
-        possible_transitions = ['To Do', 'to do', 'A Fazer', 'a fazer', 'Todo']
+        possible_transitions = [
+            'To Do', 'to do', 'TO DO',
+            'A Fazer', 'a fazer', 'A FAZER', 
+            'Todo', 'todo', 'TODO',
+            'Open', 'open', 'OPEN'
+        ]
         
         try:
+            # Refresh the issue to get current state
+            self.rawissue = self.j.issue(self.rawissue.key)
             transitions = self.j.transitions(self.rawissue)
             available_transitions = {t["name"]: t["id"] for t in transitions}
+            
+            logger.info(f"Available transitions for issue {self.key()}: {list(available_transitions.keys())}")
             
             # Try to find a matching transition
             for transition_name in possible_transitions:
                 if transition_name in available_transitions:
+                    logger.info(f"Found matching transition '{transition_name}' for issue {self.key()}")
                     self.j.transition_issue(self.rawissue, available_transitions[transition_name])
-                    logger.info(f"Transitioned issue {self.key()} to '{transition_name}'")
+                    logger.info(f"Successfully transitioned issue {self.key()} to '{transition_name}'")
                     return True
                     
             logger.warning(f"No 'To Do' transition available for issue {self.key()}. Available transitions: {list(available_transitions.keys())}")
@@ -640,6 +677,30 @@ class JiraIssue:
         except Exception as e:
             logger.error(f"Error transitioning issue {self.key()} to 'To Do': {e}")
             return False
+
+    def debug_issue_state(self):
+        """Debug method to log detailed issue state information"""
+        try:
+            # Refresh the issue to get current state
+            self.rawissue = self.j.issue(self.rawissue.key)
+            
+            # Log current status
+            current_status = self.rawissue.fields.status.name
+            logger.info(f"Issue {self.key()} current status: '{current_status}'")
+            
+            # Log assignee
+            has_assignee = (hasattr(self.rawissue.fields, 'assignee') and 
+                          self.rawissue.fields.assignee is not None)
+            assignee_name = self.rawissue.fields.assignee.displayName if has_assignee else "None"
+            logger.info(f"Issue {self.key()} assignee: '{assignee_name}'")
+            
+            # Log available transitions
+            transitions = self.j.transitions(self.rawissue)
+            available_transitions = [t["name"] for t in transitions]
+            logger.info(f"Issue {self.key()} available transitions: {available_transitions}")
+            
+        except Exception as e:
+            logger.error(f"Error getting debug info for issue {self.key()}: {e}")
 
     def get_state(self):
         return self.parse_state(self.rawissue.fields.status.name)
