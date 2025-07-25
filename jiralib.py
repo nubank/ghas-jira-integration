@@ -26,7 +26,7 @@ severity_mapping = {
 }
 
 owasp_mapping = {
-    "Alert": "2021:A04 - Insecure Design", 
+    "Alert": "2021:A04 - Insecure Design",
     "Secret": "2021:A02 - Cryptographic Failures"
 }
 
@@ -632,6 +632,8 @@ class JiraIssue:
         """Transition issue to 'Waiting Fix' status"""
         possible_transitions = [
             'Waiting Fix', 'waiting fix', 'WAITING FIX',
+            'Waiting fix',  # Added: matches the exact format from the logs
+            'WaitingFix', 'waitingfix', 'WAITINGFIX',  # Added: no spaces variations
             'Aguardando Correção', 'aguardando correção', 'AGUARDANDO CORREÇÃO',
             'Aguardando Correcao', 'aguardando correcao', 'AGUARDANDO CORRECAO',
             'Waiting for Fix', 'waiting for fix', 'WAITING FOR FIX'
