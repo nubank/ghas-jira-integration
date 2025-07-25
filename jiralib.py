@@ -350,7 +350,7 @@ class JiraProject:
                         logger.debug(f"Team member {assignee_name} not found in assignable users for project {self.projectkey}")
                         continue
                 except Exception as e:
-                    logger.warning(f"Failed to assign team member {assignee_name} to issue {raw.key}: {e}")
+                    #logger.warning(f"Failed to assign team member {assignee_name} to issue {raw.key}: {e}")
                     continue
         
         if not assigned:
