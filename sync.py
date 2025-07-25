@@ -1,12 +1,17 @@
 import jiralib
 import logging
 import itertools
+import os
 
 logger = logging.getLogger(__name__)
 
 DIRECTION_G2J = 1
 DIRECTION_J2G = 2
 DIRECTION_BOTH = 3
+
+# Configuration flag to enable/disable assignee updates for existing issues
+# Can be controlled via environment variable ENABLE_ASSIGNEE_UPDATES (default: false)
+ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'false').lower() in ('true', '1', 'yes')
 
 
 class Sync:
@@ -128,7 +133,8 @@ class Sync:
         issue = issues[0]
 
         # Update assignee for existing issues to ensure maintainers are prioritized
-        if alert:
+        # This can be disabled by setting ENABLE_ASSIGNEE_UPDATES = False
+        if alert and ENABLE_ASSIGNEE_UPDATES:
             issue.update_assignee_if_needed(alert)
 
         # make sure alert and issue are in the same state
@@ -194,6 +200,10 @@ class Sync:
 
     def update_existing_assignees(self, repo_id):
         """Update assignees for all existing issues in a repository to prioritize maintainers"""
+        if not ENABLE_ASSIGNEE_UPDATES:
+            logger.info("Assignee updates are disabled (ENABLE_ASSIGNEE_UPDATES = False)")
+            return 0, 0
+            
         logger.info(
             "Updating assignees for existing issues in repository {repo_id}...".format(repo_id=repo_id)
         )
