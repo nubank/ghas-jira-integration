@@ -631,12 +631,7 @@ class JiraIssue:
     def transition_to_waiting_fix(self):
         """Transition issue to 'Waiting Fix' status"""
         possible_transitions = [
-            'Waiting Fix', 'waiting fix', 'WAITING FIX',
-            'Waiting fix',  # Added: matches the exact format from the logs
-            'WaitingFix', 'waitingfix', 'WAITINGFIX',  # Added: no spaces variations
-            'Aguardando Correção', 'aguardando correção', 'AGUARDANDO CORREÇÃO',
-            'Aguardando Correcao', 'aguardando correcao', 'AGUARDANDO CORRECAO',
-            'Waiting for Fix', 'waiting for fix', 'WAITING FOR FIX'
+            'Waiting Fix', 'waiting fix', 'Waiting fix
         ]
         
         try:
