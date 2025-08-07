@@ -631,7 +631,7 @@ class JiraIssue:
     def transition_to_waiting_fix(self):
         """Transition issue to 'Waiting Fix' status"""
         possible_transitions = [
-            'Waiting Fix', 'waiting fix', 'Waiting fix
+            'Waiting Fix', 'waiting fix', 'Waiting fix'
         ]
         
         try:
