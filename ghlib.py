@@ -820,10 +820,12 @@ class Secret(AlertBase):
                 # but this is more complex and may not be reliable
         
         logger.debug(f"No commit SHA found in any location for alert {self.number()}")
+        # Log the raw location data to understand what GitHub provides
+        logger.info(f"Alert {self.number()} location data for analysis: {locations}")
         return None
 
     def get_secret_author(self):
-        """Get the GitHub user who most likely introduced the secret using git blame analysis"""
+        """Get the GitHub user who most likely introduced the secret using commit SHA from alert"""
         # Import here to avoid circular imports
         import sync
         
@@ -832,7 +834,7 @@ class Secret(AlertBase):
         
         # Check if feature is enabled
         if not sync.ASSIGN_TO_SECRET_AUTHOR:
-            logger.info(f"Secret author assignment disabled for alert {alert_num} (ASSIGN_TO_SECRET_AUTHOR=false) - skipping git blame analysis")
+            logger.info(f"Secret author assignment disabled for alert {alert_num} (ASSIGN_TO_SECRET_AUTHOR=false) - skipping secret author detection")
             return None
             
         file_path = self.get_location()
@@ -840,144 +842,44 @@ class Secret(AlertBase):
             logger.warning(f"No file path found for secret alert {alert_num} - cannot determine author")
             return None
             
-        line_numbers = self.get_secret_line_numbers()
-        if not line_numbers:
-            logger.warning(f"No line numbers found for secret alert {alert_num} in file {file_path}")
-            return None
-            
-        logger.info(f"Secret alert {alert_num} found in {file_path} at lines: {line_numbers}")
-        
-        # Check if we have specific commit information from the alert
-        secret_commit_sha = self.get_secret_commit_sha()
-        if secret_commit_sha:
-            logger.info(f"Secret alert {alert_num} includes commit SHA: {secret_commit_sha}")
-        else:
-            logger.info(f"No commit SHA found in alert {alert_num} locations")
+        logger.info(f"Secret alert {alert_num} found in file: {file_path}")
         
         try:
-            # Use true git blame analysis to find who last modified the secret lines
-            logger.info(f"Attempting git blame analysis for alert {alert_num}")
-            secret_author = self.get_line_blame_author(file_path, line_numbers, secret_commit_sha)
+            secret_commit_sha = self.get_secret_commit_sha()
             
-            if secret_author:
-                logger.info(f"SUCCESS: Found secret author via git blame for alert {alert_num}: {secret_author}")
-                return secret_author
-            
-            # Fallback to commit history analysis if blame fails
-            logger.warning(f"Git blame failed (file may have been deleted or moved), falling back to commit history analysis for alert {alert_num}")
-            
-            # If we have the specific commit SHA, try to get the commit directly
             if secret_commit_sha:
-                logger.info(f"Using commit SHA from alert: {secret_commit_sha}")
+                logger.info(f"Found commit SHA in alert {alert_num}: {secret_commit_sha}")
+                logger.info(f"Getting commit author directly from commit: {secret_commit_sha}")
+                
                 secret_commit = self.get_commit_details(secret_commit_sha)
                 if secret_commit:
-                    logger.info(f"Successfully retrieved commit details for {secret_commit_sha}")
+                    author_login = secret_commit.get("author", {}).get("login")
+                    if author_login:
+                        user_details = self.gh.get_user_details(author_login)
+                        if user_details and user_details.get("name"):
+                            logger.info(f"SUCCESS: Found secret author from alert commit for alert {alert_num}: {user_details['name']} ({author_login})")
+                            return user_details["name"]
                     
-                    # Verify this commit actually touches the file we're interested in
-                    files_in_commit = secret_commit.get("files", [])
-                    file_found = any(f.get("filename") == file_path for f in files_in_commit)
-                    if file_found:
-                        logger.info(f"Confirmed: Commit {secret_commit_sha} contains changes to {file_path}")
-                    else:
-                        logger.warning(f"Commit {secret_commit_sha} does not contain changes to {file_path}")
-                        # Still use this commit as it might be the commit where the secret was detected
+                    logger.warning(f"Could not get author details from commit {secret_commit_sha} for alert {alert_num}")
                 else:
-                    logger.warning(f"Could not retrieve commit details for {secret_commit_sha}")
+                    logger.warning(f"Could not retrieve commit details for {secret_commit_sha} from alert {alert_num}")
             else:
-                secret_commit = None
+                logger.warning(f"No commit SHA found in alert {alert_num} locations")
             
-            # If that didn't work, fall back to general commit history
-            if not secret_commit:
-                commits = self.get_file_commit_history(file_path, limit=50)
-                
-                if not commits:
-                    logger.warning(f"No commit history found for file {file_path} in alert {alert_num}")
-                    return None
-                    
-                secret_commit = self.find_secret_introduction_commit(commits, file_path, line_numbers, secret_commit_sha)
+            # SIMPLIFIED: No commit SHA in alert, fall back to CODEOWNERS
+            logger.info(f"No commit SHA available - falling back to CODEOWNERS assignment for alert {alert_num}")
+            logger.info(f"CODEOWNERS fallback will be handled by get_prioritized_assignees() method")
             
-            if secret_commit:
-                author_login = secret_commit.get("author", {}).get("login")
-                if author_login:
-                    user_details = self.gh.get_user_details(author_login)
-                    if user_details and user_details.get("name"):
-                        logger.info(f"FALLBACK SUCCESS: Found secret author via commit history for alert {alert_num}: {user_details['name']} ({author_login})")
-                        return user_details["name"]
-                        
-            logger.error(f"FAILED: Could not determine secret author for alert {alert_num} via any method")
+            logger.warning(f"Could not determine secret author for alert {alert_num} via any method")
             return None
             
         except Exception as e:
             logger.error(f"ERROR: Exception while finding secret author for alert {alert_num}: {e}")
             return None
 
-    def get_file_commit_history(self, file_path, limit=50):
-        """Get commit history for a specific file"""
-        try:
-            resp = requests.get(
-                "{api_url}/repos/{repo_id}/commits".format(
-                    api_url=self.gh.url,
-                    repo_id=self.github_repo.repo_id
-                ),
-                params={
-                    "path": file_path,
-                    "per_page": limit
-                },
-                headers=self.gh.default_headers(),
-                timeout=util.REQUEST_TIMEOUT,
-            )
-            resp.raise_for_status()
-            return resp.json()
-        except Exception as e:
-            logger.error(f"Failed to get commit history for {file_path}: {e}")
-            return []
+    # REMOVED: File commit history method - using ultra-simplified commit SHA only approach
 
-    def find_secret_introduction_commit(self, commits, file_path, line_numbers, secret_commit_sha=None):
-        """Find the commit that most likely introduced the secret"""
-        if not commits:
-            return None
-            
-        # If we have the specific commit SHA from the alert, try to find it first
-        if secret_commit_sha:
-            for commit in commits:
-                if commit.get("sha") == secret_commit_sha:
-                    logger.info(f"Found exact commit from alert: {secret_commit_sha}")
-                    return commit
-                    
-            # If the specific commit isn't in our list, try to get it directly
-            logger.info(f"Specific commit {secret_commit_sha} not in file history, fetching directly")
-            specific_commit = self.get_commit_details(secret_commit_sha)
-            if specific_commit:
-                return specific_commit
-            
-        # Strategy: Look for commits that added content around the secret lines
-        # We'll check the most recent commits first, as they're more likely to be relevant
-        for commit in commits[:10]:  # Check up to 10 most recent commits
-            try:
-                commit_sha = commit.get("sha")
-                if not commit_sha:
-                    continue
-                    
-                # Get the commit details to see what changed
-                commit_details = self.get_commit_details(commit_sha)
-                if not commit_details:
-                    continue
-                    
-                # Check if this commit modified lines near where the secret was found
-                if self.commit_affects_secret_lines(commit_details, file_path, line_numbers):
-                    logger.debug(f"Found potential secret introduction commit: {commit_sha}")
-                    return commit
-                    
-            except Exception as e:
-                logger.warning(f"Error analyzing commit {commit.get('sha', 'unknown')}: {e}")
-                continue
-                
-            # If no specific commit found, return the most recent commit as fallback
-            if commits:
-                logger.debug(f"Using most recent commit as fallback for secret author")
-                return commits[0]
-                
-            return None
+    # REMOVED: Complex secret introduction commit detection - using simplified commit SHA approach instead
 
     def get_commit_details(self, commit_sha):
         """Get detailed information about a specific commit"""
@@ -1004,26 +906,7 @@ class Secret(AlertBase):
             logger.warning(f"Failed to get commit details for {commit_sha}: {e}")
             return None
 
-    def commit_affects_secret_lines(self, commit_details, file_path, line_numbers):
-        """Check if a commit affects the lines where the secret was found"""
-        try:
-            files = commit_details.get("files", [])
-            
-            for file_info in files:
-                if file_info.get("filename") == file_path:
-                    # Check if the file was added or modified (not just deleted)
-                    status = file_info.get("status", "")
-                    if status in ["added", "modified"]:
-                        # For simplicity, we'll consider any addition/modification as potentially relevant
-                        # In a more sophisticated implementation, we could parse the patch
-                        # to see if it affects the specific line numbers
-                        return True
-                        
-            return False
-            
-        except Exception as e:
-            logger.warning(f"Error checking if commit affects secret lines: {e}")
-            return False
+    # REMOVED: Complex commit line analysis - using simplified commit SHA approach instead
 
     def get_prioritized_assignees(self):
         """Override to prioritize secret author when feature is enabled"""
@@ -1068,222 +951,4 @@ class Secret(AlertBase):
         
         return codeowners_result
 
-    def get_line_blame_author(self, file_path, line_numbers, secret_commit_sha=None):
-        """Get the author who last modified the specific lines using git blame analysis"""
-        try:
-            # First try to get the current file content
-            file_content = self.get_file_content(file_path)
-            
-            # If file doesn't exist in current branch, try to find it in commit history
-            if not file_content:
-                logger.info(f"File {file_path} not found in current branch, searching in commit history")
-                
-                # First, try with the specific commit SHA from the alert if we have it
-                if secret_commit_sha:
-                    logger.info(f"Trying to get {file_path} from alert commit SHA: {secret_commit_sha}")
-                    file_content = self.get_file_content(file_path, secret_commit_sha)
-                    if file_content:
-                        logger.info(f"Successfully found {file_path} in alert commit {secret_commit_sha}")
-                    else:
-                        logger.warning(f"Could not get {file_path} from alert commit {secret_commit_sha}")
-                
-                # If that didn't work, try the general commit history approach
-                if not file_content:
-                    commits = self.get_file_commit_history(file_path, limit=50)
-                    
-                    if commits:
-                        # Try to get file content from the most recent commit where it existed
-                        for commit in commits[:10]:  # Check up to 10 recent commits
-                            commit_sha = commit.get("sha")
-                            if commit_sha:
-                                file_content = self.get_file_content(file_path, commit_sha)
-                                if file_content:
-                                    logger.info(f"Found {file_path} in commit {commit_sha}, proceeding with blame analysis")
-                                    break
-                
-                if not file_content:
-                    logger.debug(f"Could not get file content for {file_path} from any commit")
-                    return None
-            
-            # Get commit history for detailed analysis
-            commits = self.get_file_commit_history(file_path, limit=100)
-            if not commits:
-                logger.debug(f"No commit history found for {file_path}")
-                return None
-            
-            # Analyze each line to find who last modified it
-            line_authors = {}
-            
-            for line_num in line_numbers:
-                author = self.find_line_last_author(file_path, line_num, commits)
-                if author:
-                    line_authors[line_num] = author
-            
-            if not line_authors:
-                logger.debug(f"No line authors found for lines {line_numbers} in {file_path}")
-                return None
-            
-            # Find the most frequent author (in case secret spans multiple lines with different authors)
-            author_counts = {}
-            for author in line_authors.values():
-                author_counts[author] = author_counts.get(author, 0) + 1
-            
-            # Return the author who modified the most lines containing the secret
-            most_frequent_author = max(author_counts.items(), key=lambda x: x[1])[0]
-            
-            # Get full user details
-            user_details = self.gh.get_user_details(most_frequent_author)
-            if user_details and user_details.get("name"):
-                logger.debug(f"Git blame found author {user_details['name']} ({most_frequent_author}) for lines {line_numbers}")
-                return user_details["name"]
-                
-            return None
-            
-        except Exception as e:
-            logger.warning(f"Git blame analysis failed for {file_path}: {e}")
-            return None
-
-    def get_file_content(self, file_path, commit_sha=None):
-        """Get the content of a file, optionally from a specific commit"""
-        try:
-            # Try to get from specific commit first if provided
-            if commit_sha:
-                logger.info(f"Attempting to get {file_path} content from commit {commit_sha}")
-                resp = requests.get(
-                    "{api_url}/repos/{repo_id}/contents/{file_path}".format(
-                        api_url=self.gh.url,
-                        repo_id=self.github_repo.repo_id,
-                        file_path=file_path
-                    ),
-                    params={"ref": commit_sha},
-                    headers=self.gh.default_headers(),
-                    timeout=util.REQUEST_TIMEOUT,
-                )
-                
-                if resp.status_code == 200:
-                    content_data = resp.json()
-                    if content_data.get("type") == "file" and content_data.get("content"):
-                        import base64
-                        content = base64.b64decode(content_data["content"]).decode('utf-8')
-                        logger.info(f"Successfully retrieved {file_path} from commit {commit_sha}")
-                        return content.split('\n')
-                else:
-                    logger.warning(f"File {file_path} not found in commit {commit_sha}: {resp.status_code}")
-            
-            # Fall back to current branch
-            logger.info(f"Attempting to get {file_path} content from current branch")
-            resp = requests.get(
-                "{api_url}/repos/{repo_id}/contents/{file_path}".format(
-                    api_url=self.gh.url,
-                    repo_id=self.github_repo.repo_id,
-                    file_path=file_path
-                ),
-                headers=self.gh.default_headers(),
-                timeout=util.REQUEST_TIMEOUT,
-            )
-            resp.raise_for_status()
-            
-            content_data = resp.json()
-            if content_data.get("type") == "file" and content_data.get("content"):
-                import base64
-                content = base64.b64decode(content_data["content"]).decode('utf-8')
-                logger.info(f"Successfully retrieved {file_path} from current branch")
-                return content.split('\n')
-            
-            return None
-            
-        except Exception as e:
-            if "404" in str(e):
-                logger.warning(f"File {file_path} not found (404) - may have been deleted after secret was introduced")
-            else:
-                logger.warning(f"Failed to get file content for {file_path}: {e}")
-            return None
-
-    def find_line_last_author(self, file_path, line_number, commits):
-        """Find who last modified a specific line by analyzing commit diffs"""
-        try:
-            # Go through commits from most recent to oldest
-            for commit in commits:
-                commit_sha = commit.get("sha")
-                if not commit_sha:
-                    continue
-                
-                # Get commit details with diff information
-                commit_details = self.get_commit_details(commit_sha)
-                if not commit_details:
-                    continue
-                
-                # Check if this commit modified the line we're interested in
-                if self.commit_modified_line(commit_details, file_path, line_number):
-                    author_login = commit.get("author", {}).get("login")
-                    if author_login:
-                        logger.debug(f"Found line {line_number} last modified by {author_login} in commit {commit_sha}")
-                        return author_login
-            
-            # If no specific commit found, return the author of the first commit to the file
-            if commits:
-                author_login = commits[-1].get("author", {}).get("login")  # Last commit = oldest commit
-                if author_login:
-                    logger.debug(f"Using file creator {author_login} as fallback for line {line_number}")
-                    return author_login
-            
-            return None
-            
-        except Exception as e:
-            logger.warning(f"Error finding author for line {line_number}: {e}")
-            return None
-
-    def commit_modified_line(self, commit_details, file_path, line_number):
-        """Check if a commit modified a specific line (simplified implementation)"""
-        try:
-            files = commit_details.get("files", [])
-            
-            for file_info in files:
-                if file_info.get("filename") == file_path:
-                    # Get the patch to analyze line changes
-                    patch = file_info.get("patch", "")
-                    if not patch:
-                        continue
-                    
-                    # Parse the patch to see if it affects our line
-                    # This is a simplified implementation - a full implementation
-                    # would need to parse unified diff format properly
-                    if self.patch_affects_line(patch, line_number):
-                        return True
-            
-            return False
-            
-        except Exception as e:
-            logger.warning(f"Error checking if commit modified line {line_number}: {e}")
-            return False
-
-    def patch_affects_line(self, patch, target_line):
-        """Simplified patch analysis to check if a specific line was modified"""
-        try:
-            lines = patch.split('\n')
-            current_line = 0
-            
-            for line in lines:
-                if line.startswith('@@'):
-                    # Parse hunk header: @@ -old_start,old_count +new_start,new_count @@
-                    import re
-                    match = re.search(r'@@\s*-\d+(?:,\d+)?\s*\+(\d+)(?:,\d+)?\s*@@', line)
-                    if match:
-                        current_line = int(match.group(1)) - 1  # Convert to 0-based
-                elif line.startswith('+') and not line.startswith('+++'):
-                    # This is an added line
-                    current_line += 1
-                    if current_line == target_line:
-                        return True
-                elif line.startswith('-') and not line.startswith('---'):
-                    # This is a deleted line - doesn't increment current_line
-                    pass
-                elif not line.startswith('\\'):
-                    # This is a context line (unchanged)
-                    current_line += 1
-            
-            return False
-            
-        except Exception as e:
-            logger.warning(f"Error parsing patch for line {target_line}: {e}")
-            return False    
+    # REMOVED: Smart commit detection - using ultra-simplified commit SHA only approach    
