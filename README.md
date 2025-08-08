@@ -56,7 +56,9 @@ Currently, two-way integration is not yet possible via the action. If you need i
 
 
 #### Using this Action to synchronize secret scanning alerts
-Secret scanning alerts can only be queried with the API in private repositories. For public repositories, there will just be an empty results list. You'll need to pass in a PAT via `github_token` that has admin rights to access secret scanning alerts. Ensure the PAT has the `security_events` scope:
+This integration supports both default and generic secret scanning alerts. Secret scanning alerts can only be queried with the API in private repositories. For public repositories, there will just be an empty results list. You'll need to pass in a PAT via `github_token` that has admin rights to access secret scanning alerts. Ensure the PAT has the `security_events` scope:
+
+**Note**: To include generic secrets in your Jira integration, make sure that "Generic secret detection" is enabled in your repository's Security settings under "Code security and analysis".
 ```
         with:
           jira_url: '<INSERT JIRA SERVER URL>'
@@ -166,6 +168,7 @@ In addition to the [usual requirements](#using-the-github-action) you also need:
 
 First, [create a GitHub webhook](https://docs.github.com/en/developers/webhooks-and-events/creating-webhooks) with the following event triggers:
 * [Code scanning alerts](https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#code_scanning_alert)
+* [Secret scanning alerts](https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#secret_scanning_alert)
 * [Repositories](https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#repository)
 
 This can be either a repository or an organization-wide hook. Set the `Payload URL` to `https://<the machine>/github`, the `Content type` to `application/json` and insert your webhook `Secret`. Make sure to `Enable SSL verification`.

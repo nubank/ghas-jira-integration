@@ -120,13 +120,13 @@ def github_webhook():
             400,
         )
 
-    if request.headers.get("X-GitHub-Event", "") != "code_scanning_alert":
+    github_event = request.headers.get("X-GitHub-Event", "")
+    if github_event not in ["code_scanning_alert", "secret_scanning_alert"]:
         return (
             jsonify(
                 {
                     "code": 400,
-                    "error": "Wrong event type: "
-                    + request.headers.get("X-GitHub-Event", ""),
+                    "error": "Wrong event type: " + github_event,
                 }
             ),
             400,
