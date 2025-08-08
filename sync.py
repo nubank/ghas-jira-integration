@@ -112,16 +112,17 @@ class Sync:
                 i.delete()
             return None
 
-        # IMPROVED REOPEN LOGIC:
-        # Only create new tickets when we have a specific "reappeared_in_branch" event
-        # AND there are existing closed/done tickets. This prevents duplicate ticket creation.
+        # REAPPEARANCE LOGIC:
+        # When alert reappears in branch, create a NEW ticket while preserving existing Done tickets.
+        # This maintains audit trail while providing fresh tracking for the reappeared issue.
         create_new_ticket = False
+        
         if alert.get_state() is True and len(issues) > 0:
             # Check if we have a recent "reappeared_in_branch" event
             if recent_event == "reappeared_in_branch":
                 branch_name = self._extract_branch_name(branch_ref) if branch_ref else "unknown"
                 
-                # Look for done/closed issues - if found, this is a true reappearance
+                # Look for done/closed issues - if found, create new ticket for reappearance
                 for i in issues:
                     current_status = i.rawissue.fields.status.name.strip().lower()
                     if current_status in ['done', 'concluído', self.jira.endstate.lower()]:
@@ -184,7 +185,7 @@ class Sync:
                  
             newissue.adjust_state(alert.get_state())
             
-            # If we created a new ticket for a reopened alert, we're done here
+            # If we created a new ticket for a reappeared alert, we're done here
             if create_new_ticket:
                 return alert.get_state()
                 

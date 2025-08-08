@@ -720,6 +720,50 @@ class JiraIssue:
             logger.error(f"Error transitioning issue {self.key()} to 'To Do': {e}")
             return False
 
+    def transition_to_replanning(self, branch_name):
+        """Transition Done issue to Replanning status when alert reappears"""
+        try:
+            logger.info(f"Transitioning issue {self.key()} from Done to Replanning due to reappearance in branch {branch_name}")
+            
+            # Add comment about reappearance
+            reappear_comment = f"Alert reappeared in branch {branch_name}. Moving to Replanning for investigation."
+            self.j.add_comment(self.rawissue, reappear_comment)
+            
+            # Refresh the issue to get current state
+            self.rawissue = self.j.issue(self.rawissue.key)
+            transitions = self.j.transitions(self.rawissue)
+            available_transitions = {t["name"]: t["id"] for t in transitions}
+            
+            logger.info(f"Available transitions for issue {self.key()}: {list(available_transitions.keys())}")
+            
+            # Try different possible names for the Replanning transition
+            replanning_transitions = [
+                "Replanning", "replanning", "REPLANNING",
+                "Replan", "replan", "REPLAN", 
+                "Re-planning", "re-planning", "RE-PLANNING",
+                "Reopen", "reopen", "REOPEN"
+            ]
+            
+            for transition_name in replanning_transitions:
+                if transition_name in available_transitions:
+                    logger.info(f"Found transition '{transition_name}' for issue {self.key()}")
+                    self.j.transition_issue(self.rawissue, available_transitions[transition_name])
+                    logger.info(f"Successfully transitioned issue {self.key()} to {transition_name}")
+                    return True
+            
+            # If no specific Replanning transition found, try to reopen to To Do
+            logger.warning(f"No Replanning transition found for issue {self.key()}, attempting to reopen")
+            if self.transition_to_todo():
+                logger.info(f"Successfully reopened issue {self.key()} to active status")
+                return True
+            else:
+                logger.error(f"Failed to reopen issue {self.key()}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error transitioning issue {self.key()} to Replanning: {e}")
+            return False
+
     def debug_issue_state(self):
         """Debug method to log detailed issue state information"""
         try:
