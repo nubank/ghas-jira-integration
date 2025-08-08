@@ -44,7 +44,7 @@ This information was automatically collected from the repository's codeowners fi
 {assignee}
 
 *More details*
-{alert_url}
+{alert_url}{reappear_context}
 
 ----
 This issue was automatically generated from a GitHub alert, and will be automatically resolved once the underlying problem is fixed.
@@ -67,7 +67,7 @@ This information was automatically collected from the repository's codeowners fi
 {assignee}
 
 *More details*
-{alert_url}
+{alert_url}{reappear_context}
 
 ----
 This issue was automatically generated from a GitHub Secret Scanning alert.
@@ -233,7 +233,8 @@ class JiraProject:
         responsible_teams,
         all_members,
         cve,
-        alert
+        alert,
+        reappear_context=None
     ):
 
         template = SECRET_DESC_TEMPLATE if alert_type == "Secret" else DESC_TEMPLATE
@@ -246,6 +247,10 @@ class JiraProject:
             if alert_type == "Secret" 
             else long_desc
         )
+        
+        # Add reappearance context to summary if provided
+        if reappear_context:
+            summary = f"{summary} - {reappear_context}"
         
         cve_field = [cve] if cve is not None else []
         language = language if language else None
@@ -267,6 +272,7 @@ class JiraProject:
                 responsible_teams=responsible_teams,
                 all_members=all_members,
                 assignee=formatted_assignees,
+                reappear_context=f"\n\n*{reappear_context}*" if reappear_context else "",
             ),
             issuetype={"name": "Vulnerability - General"},
             labels=self.labels,

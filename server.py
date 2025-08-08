@@ -135,6 +135,9 @@ def github_webhook():
     alert = json_dict.get("alert")
     alert_url = alert.get("html_url")
     alert_num = alert.get("number")
+    
+    # Extract branch information from the webhook payload
+    branch_ref = json_dict.get("ref", "unknown")
 
     # TODO: We might want to do the following asynchronously, as it could
     # take time to do a full sync on a repo with many alerts / issues
@@ -155,7 +158,8 @@ def github_webhook():
     # behaviour and response codes explicitly
     with sync_lock:
         if transition == "appeared_in_branch":
-            app.logger.debug('Nothing to do for "appeared_in_branch"')
+            # Handle alert reappearing after being fixed - pass branch info
+            sync.alert_reappeared(repo_id, alert_num, branch_ref)
         elif transition == "created":
             sync.alert_created(repo_id, alert_num)
         elif transition in ["closed_by_user", "reopened_by_user", "reopened"]:

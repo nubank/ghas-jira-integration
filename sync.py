@@ -35,6 +35,11 @@ class Sync:
     def alert_fixed(self, repo_id, alert_num):
         a = self.github.getRepository(repo_id).get_alert(alert_num)
         self.sync(a, self.jira.fetch_issues(a.get_key()), DIRECTION_G2J)
+        
+    def alert_reappeared(self, repo_id, alert_num, branch_ref="unknown"):
+        """Handle alert reappearing in branch after being fixed"""
+        a = self.github.getRepository(repo_id).get_alert(alert_num)
+        self.sync(a, self.jira.fetch_issues(a.get_key()), DIRECTION_G2J, recent_event="reappeared_in_branch", branch_ref=branch_ref)
 
     def issue_created(self, desc):
         repo_id, alert_num, _, _, _ = jiralib.parse_alert_info(desc)
@@ -87,7 +92,19 @@ class Sync:
             
         logger.info(f"{'='*60}")
 
-    def sync(self, alert, issues, in_direction):
+    def _extract_branch_name(self, branch_ref):
+        """Extract clean branch name from GitHub branch reference"""
+        if not branch_ref:
+            return "unknown"
+        
+        # Handle full refs like "refs/heads/master" or "refs/heads/main"
+        if branch_ref.startswith("refs/heads/"):
+            return branch_ref.replace("refs/heads/", "")
+        
+        # Handle direct branch names
+        return branch_ref
+
+    def sync(self, alert, issues, in_direction, recent_event=None, branch_ref=None):
         if alert is None:
             # there is no alert, so we have to remove all issues
             # that have ever been associated with it
@@ -95,26 +112,49 @@ class Sync:
                 i.delete()
             return None
 
-        # Check if this is a reopened alert - if the alert is open but existing issues are closed
+        # IMPROVED REOPEN LOGIC:
+        # Only create new tickets when we have a specific "reappeared_in_branch" event
+        # AND there are existing closed/done tickets. This prevents duplicate ticket creation.
         create_new_ticket = False
         if alert.get_state() is True and len(issues) > 0:
-            for i in issues:
-                current_status = i.rawissue.fields.status.name.strip().lower()
-                if current_status in ['done', 'concluído', self.jira.endstate.lower()]:
-                    # This is a reopened alert - create a new ticket without deleting existing ones
+            # Check if we have a recent "reappeared_in_branch" event
+            if recent_event == "reappeared_in_branch":
+                branch_name = self._extract_branch_name(branch_ref) if branch_ref else "unknown"
+                
+                # Look for done/closed issues - if found, this is a true reappearance
+                for i in issues:
+                    current_status = i.rawissue.fields.status.name.strip().lower()
+                    if current_status in ['done', 'concluído', self.jira.endstate.lower()]:
+                        logger.info(
+                            "Alert {alert_num} in {repo_id} reappeared in branch {branch}. Creating new ticket while preserving completed ones.".format(
+                                alert_num=alert.number(),
+                                repo_id=alert.github_repo.repo_id,
+                                branch=branch_name.upper()
+                            )
+                        )
+                        create_new_ticket = True
+                        break
+                        
+                # If no done issues found but we have open issues, continue with existing ticket
+                if not create_new_ticket:
                     logger.info(
-                        "Alert {alert_num} in {repo_id} was reopened. Creating new ticket while preserving existing ones.".format(
+                        "Alert {alert_num} in {repo_id} reappeared in branch {branch} but has open tickets. Using existing ticket.".format(
                             alert_num=alert.number(),
                             repo_id=alert.github_repo.repo_id,
+                            branch=branch_name.upper()
                         )
                     )
-                    create_new_ticket = True
-                    break
 
-        # Create a new issue if there are no issues or if the alert was reopened
+        # Create a new issue if there are no issues or if the alert reappeared after being fixed
         if len(issues) == 0 or create_new_ticket:
             # Log comprehensive workflow summary before creating issue
             self.log_assignment_workflow_summary(alert, alert.github_repo.repo_id)
+            
+            # Prepare reappearance context for JIRA issue
+            reappear_context = None
+            if create_new_ticket and recent_event == "reappeared_in_branch":
+                branch_name = self._extract_branch_name(branch_ref) if branch_ref else "unknown"
+                reappear_context = f"Reappeared in branch {branch_name.upper()}"
             
             newissue = self.jira.create_issue(
                 alert.github_repo.repo_id,
@@ -136,6 +176,7 @@ class Sync:
                 alert.get_team_members(),
                 alert.get_cve(),
                 alert=alert,
+                reappear_context=reappear_context,
             )
             
             if newissue is None:
@@ -227,7 +268,16 @@ class Sync:
 
         # perform sync
         for akey, (alert, issues) in pairs.items():
-            past_state = states.get(akey, None)
+            past_state_info = states.get(akey, None)
+            
+            # Handle both old format (boolean) and new format (dict with state and metadata)
+            if isinstance(past_state_info, bool):
+                past_state = past_state_info
+            elif isinstance(past_state_info, dict):
+                past_state = past_state_info.get('state')
+            else:
+                past_state = None
+                
             if alert is None or alert.get_state() != past_state:
                 d = DIRECTION_G2J
             else:
@@ -238,7 +288,13 @@ class Sync:
             if new_state is None:
                 states.pop(akey, None)
             else:
-                states[akey] = new_state
+                # Store enhanced state information
+                import datetime
+                states[akey] = {
+                    'state': new_state,
+                    'last_sync': datetime.datetime.now().isoformat(),
+                    'tickets_created': len([i for i in issues if i.get_state()]) if issues else 0
+                }
 
     def update_existing_assignees(self, repo_id):
         """Update assignees for all existing issues in a repository to prioritize maintainers"""
