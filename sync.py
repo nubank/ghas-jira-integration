@@ -13,8 +13,8 @@ DIRECTION_BOTH = 3
 ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'false').lower() in ('true', '1', 'yes')
 
 # Configuration flag to enable/disable secret author assignment
-# Can be controlled via environment variable ASSIGN_TO_SECRET_AUTHOR (default: false)
-ASSIGN_TO_SECRET_AUTHOR = os.getenv('ASSIGN_TO_SECRET_AUTHOR', 'false').lower() in ('true', '1', 'yes')
+# Can be controlled via environment variable ASSIGN_TO_SECRET_AUTHOR (default: true)
+ASSIGN_TO_SECRET_AUTHOR = os.getenv('ASSIGN_TO_SECRET_AUTHOR', 'true').lower() in ('true', '1', 'yes')
 
 
 class Sync:

@@ -806,7 +806,7 @@ class Secret(AlertBase):
         
         # Check if feature is enabled
         if not sync.ASSIGN_TO_SECRET_AUTHOR:
-            logger.info(f"Secret author assignment disabled for alert {alert_num} (ASSIGN_TO_SECRET_AUTHOR=false)")
+            logger.info(f"Secret author assignment disabled for alert {alert_num} (ASSIGN_TO_SECRET_AUTHOR=false) - skipping git blame analysis")
             return None
             
         file_path = self.get_location()
@@ -967,7 +967,7 @@ class Secret(AlertBase):
             else:
                 logger.warning(f"Secret author not found for alert {alert_num}, falling back to CODEOWNERS")
         else:
-            logger.info(f"Secret author assignment disabled for alert {alert_num}, using CODEOWNERS")
+            logger.info(f"Secret author assignment disabled for alert {alert_num} (ASSIGN_TO_SECRET_AUTHOR=false), using CODEOWNERS")
         
         # Fall back to standard CODEOWNERS-based assignment
         logger.info(f"Using CODEOWNERS-based assignment for alert {alert_num}")
@@ -979,9 +979,14 @@ class Secret(AlertBase):
             total_assignees = len(maintainers) + len(members)
             logger.info(f"CODEOWNERS SUCCESS: Found {total_assignees} potential assignees for alert {alert_num} (maintainers: {len(maintainers)}, members: {len(members)})")
             if maintainers:
-                logger.info(f"Maintainers for alert {alert_num}: {maintainers}")
+                logger.info(f"CODEOWNERS maintainers for alert {alert_num}: {maintainers}")
             if members:
-                logger.info(f"Members for alert {alert_num}: {members}")
+                logger.info(f"CODEOWNERS members for alert {alert_num}: {members}")
+                
+            # Log the primary assignee that will be tried first
+            primary_assignee = maintainers[0] if maintainers else (members[0] if members else None)
+            if primary_assignee:
+                logger.info(f"PRIMARY ASSIGNEE for alert {alert_num}: {primary_assignee} (from CODEOWNERS)")
         else:
             logger.warning(f"No CODEOWNERS found for alert {alert_num}, will use default assignment")
         
