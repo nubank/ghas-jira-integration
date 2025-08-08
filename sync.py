@@ -10,8 +10,11 @@ DIRECTION_J2G = 2
 DIRECTION_BOTH = 3
 
 # Configuration flag to enable/disable assignee updates for existing issues
-# Can be controlled via environment variable ENABLE_ASSIGNEE_UPDATES (default: true)
 ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'false').lower() in ('true', '1', 'yes')
+
+# Configuration flag to enable/disable secret author assignment
+# Can be controlled via environment variable ASSIGN_TO_SECRET_AUTHOR (default: false)
+ASSIGN_TO_SECRET_AUTHOR = os.getenv('ASSIGN_TO_SECRET_AUTHOR', 'false').lower() in ('true', '1', 'yes')
 
 
 class Sync:
@@ -48,6 +51,42 @@ class Sync:
         a = self.github.getRepository(repo_id).get_alert(alert_num)
         self.sync(a, self.jira.fetch_issues(a.get_key()), DIRECTION_J2G)
 
+    def log_assignment_workflow_summary(self, alert, repo_id):
+        """Log a comprehensive summary of the assignment workflow for debugging"""
+        if not alert:
+            return
+            
+        alert_num = alert.number()
+        alert_type = alert.get_type()
+        
+        logger.info(f"ASSIGNMENT WORKFLOW SUMMARY for {alert_type} Alert #{alert_num}")
+        logger.info(f"{'='*60}")
+        
+        # Basic alert info
+        logger.info(f"Alert Details:")
+        logger.info(f"   Type: {alert_type}")
+        logger.info(f"   Number: #{alert_num}")
+        logger.info(f"   Repository: {repo_id}")
+        logger.info(f"   Location: {alert.get_location() or 'Not available'}")
+        
+        if hasattr(alert, 'get_secret_line_numbers'):
+            line_numbers = alert.get_secret_line_numbers()
+            if line_numbers:
+                logger.info(f"   Lines: {line_numbers}")
+        
+        # Assignment configuration
+        logger.info(f"⚙️  Configuration:")
+        logger.info(f"   Secret Author Assignment: {'Enabled' if ASSIGN_TO_SECRET_AUTHOR else 'Disabled'}")
+        logger.info(f"   Assignee Updates: {'Enabled' if ENABLE_ASSIGNEE_UPDATES else 'Disabled'}")
+        
+        # Show what the assignment logic will do
+        if alert_type == "Secret" and ASSIGN_TO_SECRET_AUTHOR:
+            logger.info(f"Assignment Strategy: Secret Author Detection -> CODEOWNERS -> Default")
+        else:
+            logger.info(f"Assignment Strategy: CODEOWNERS -> Default")
+            
+        logger.info(f"{'='*60}")
+
     def sync(self, alert, issues, in_direction):
         if alert is None:
             # there is no alert, so we have to remove all issues
@@ -74,6 +113,9 @@ class Sync:
 
         # Create a new issue if there are no issues or if the alert was reopened
         if len(issues) == 0 or create_new_ticket:
+            # Log comprehensive workflow summary before creating issue
+            self.log_assignment_workflow_summary(alert, alert.github_repo.repo_id)
+            
             newissue = self.jira.create_issue(
                 alert.github_repo.repo_id,
                 alert.short_desc(),

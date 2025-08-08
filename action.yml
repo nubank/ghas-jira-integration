@@ -35,6 +35,10 @@ inputs:
     description: 'Custom reopen state'
     required: false
     default: 'To Do'
+  assign_secret_author:
+    description: 'Assign secret scanning issues to the person who introduced the secret (requires additional GitHub API calls)'
+    required: false
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -51,6 +55,7 @@ runs:
       INPUTS_SYNC_DIRECTION: ${{ inputs.sync_direction }}
       INPUTS_ISSUE_END_STATE: ${{ inputs.issue_end_state }}
       INPUTS_ISSUE_REOPEN_STATE: ${{ inputs.issue_reopen_state }}
+      INPUTS_ASSIGN_SECRET_AUTHOR: ${{ inputs.assign_secret_author }}
     run: |
       pip3 install -r requirements.txt
       REPOSITORY_NAME="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f 2)"
@@ -66,4 +71,5 @@ runs:
         --jira-labels "$INPUTS_JIRA_LABELS" \
         --direction "$INPUTS_SYNC_DIRECTION" \
         --issue-end-state "$INPUTS_ISSUE_END_STATE" \
-        --issue-reopen-state "$INPUTS_ISSUE_REOPEN_STATE"
+        --issue-reopen-state "$INPUTS_ISSUE_REOPEN_STATE" \
+        $([ "$INPUTS_ASSIGN_SECRET_AUTHOR" = "true" ] && echo "--assign-secret-author")

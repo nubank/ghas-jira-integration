@@ -13,4 +13,5 @@ cd / && pipenv run /gh2jira sync \
                             --direction "$INPUT_SYNC_DIRECTION" \
                             --issue-end-state "$INPUT_ISSUE_END_STATE" \
                             --issue-reopen-state "$INPUT_ISSUE_REOPEN_STATE" \
+                            $([ "$INPUT_ASSIGN_SECRET_AUTHOR" = "true" ] && echo "--assign-secret-author") \
                             --state-issue -

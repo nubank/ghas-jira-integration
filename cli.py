@@ -57,6 +57,11 @@ def serve(args):
     # Determine auto-transition setting
     auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
     
+    # Set secret author assignment if specified
+    if hasattr(args, 'assign_secret_author') and args.assign_secret_author:
+        import os
+        os.environ['ASSIGN_TO_SECRET_AUTHOR'] = 'true'
+    
     s = Sync(
         github,
         jira.getProject(
@@ -95,6 +100,11 @@ def sync(args):
     
     # Determine auto-transition setting
     auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    
+    # Set secret author assignment if specified
+    if hasattr(args, 'assign_secret_author') and args.assign_secret_author:
+        import os
+        os.environ['ASSIGN_TO_SECRET_AUTHOR'] = 'true'
     
     jira_project = jira.getProject(
         args.jira_project,
@@ -148,6 +158,11 @@ def update_assignees(args):
     
     # Determine auto-transition setting
     auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
+    
+    # Set secret author assignment if specified
+    if hasattr(args, 'assign_secret_author') and args.assign_secret_author:
+        import os
+        os.environ['ASSIGN_TO_SECRET_AUTHOR'] = 'true'
     
     jira_project = jira.getProject(
         args.jira_project,
@@ -294,6 +309,12 @@ def main():
     issue_state_base.add_argument(
         "--no-auto-transition",
         help="Disable automatic status transitions based on assignee",
+        action="store_true",
+        default=False,
+    )
+    issue_state_base.add_argument(
+        "--assign-secret-author",
+        help="Assign secret scanning issues to the person who introduced the secret (requires additional GitHub API calls)",
         action="store_true",
         default=False,
     )
