@@ -168,7 +168,6 @@ In addition to the [usual requirements](#using-the-github-action) you also need:
 
 First, [create a GitHub webhook](https://docs.github.com/en/developers/webhooks-and-events/creating-webhooks) with the following event triggers:
 * [Code scanning alerts](https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#code_scanning_alert)
-* [Secret scanning alerts](https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#secret_scanning_alert)
 * [Repositories](https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#repository)
 
 This can be either a repository or an organization-wide hook. Set the `Payload URL` to `https://<the machine>/github`, the `Content type` to `application/json` and insert your webhook `Secret`. Make sure to `Enable SSL verification`.

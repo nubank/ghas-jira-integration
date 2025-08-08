@@ -76,7 +76,7 @@ class GitHub:
         url,
         secret,
         active=True,
-        events=["code_scanning_alert", "secret_scanning_alert", "repository"],
+        events=["code_scanning_alert", "repository"],
         insecure_ssl="0",
         content_type="json",
     ):
@@ -90,7 +90,7 @@ class GitHub:
         url,
         secret,
         active=True,
-        events=["code_scanning_alert", "secret_scanning_alert", "repository"],
+        events=["code_scanning_alert", "repository"],
         insecure_ssl="0",
         content_type="json",
     ):
@@ -206,7 +206,7 @@ class GHRepository:
         url,
         secret,
         active=True,
-        events=["code_scanning_alert", "secret_scanning_alert", "repository"],
+        events=["code_scanning_alert", "repository"],
         insecure_ssl="0",
         content_type="json",
     ):
