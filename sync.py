@@ -11,7 +11,7 @@ DIRECTION_BOTH = 3
 
 ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'true').lower() in ('true', '1', 'yes')
 
-UPDATE_OPEN_ISSUES_ONLY = os.getenv('UPDATE_OPEN_ISSUES_ONLY', 'false').lower() in ('true', '1', 'yes')
+UPDATE_OPEN_ISSUES_ONLY = os.getenv('UPDATE_OPEN_ISSUES_ONLY', 'true').lower() in ('true', '1', 'yes')
 
 ASSIGN_TO_SECRET_AUTHOR = os.getenv('ASSIGN_TO_SECRET_AUTHOR', 'true').lower() in ('true', '1', 'yes')
 
