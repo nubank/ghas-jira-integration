@@ -430,9 +430,7 @@ class JiraIssue:
         current_assignee = None
         if hasattr(self.rawissue.fields, 'assignee') and self.rawissue.fields.assignee:
             current_assignee = self.rawissue.fields.assignee.displayName
-            
-        logger.info(f"Current assignee for issue {self.key()}: {current_assignee}")
-        
+                    
         # Try maintainers first
         assigned = False
         for assignee_name in maintainers:
@@ -496,7 +494,7 @@ class JiraIssue:
                         logger.debug(f"Member {assignee_name} not found in assignable users for project {self.project.projectkey}")
                         continue
                 except Exception as e:
-                    logger.warning(f"Failed to assign member {assignee_name} to issue {self.key()}: {e}")
+                    logger.debug(f"Failed to assign member {assignee_name} to issue {self.key()}: {e}")
                     continue
         
         # Update status based on assignment result

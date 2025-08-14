@@ -835,15 +835,11 @@ class Secret(AlertBase):
         if not file_path:
             logger.warning(f"No file path found for secret alert {alert_num} - cannot determine author.")
             return None
-            
-        logger.info(f"Secret alert {alert_num} found in file: {file_path}")
-        
+                    
         try:
             secret_commit_sha = self.get_secret_commit_sha()
             
             if secret_commit_sha:
-                logger.info(f"Found commit SHA in alert {alert_num}: {secret_commit_sha}")
-                logger.info(f"Getting commit author directly from commit: {secret_commit_sha}")
                 
                 secret_commit = self.get_commit_details(secret_commit_sha)
                 if secret_commit:
@@ -851,7 +847,6 @@ class Secret(AlertBase):
                     if author_login:
                         user_details = self.gh.get_user_details(author_login)
                         if user_details and user_details.get("name"):
-                            logger.info(f"SUCCESS: Found secret author from alert commit for alert {alert_num}: {user_details['name']} ({author_login})")
                             return user_details["name"]
                     
                     logger.warning(f"Could not get author details from commit {secret_commit_sha} for alert {alert_num}")
@@ -903,7 +898,6 @@ class Secret(AlertBase):
             secret_author = self.get_secret_author()
             
             if secret_author:
-                logger.info(f"ASSIGNMENT SUCCESS: Prioritizing secret author '{secret_author}' for alert {alert_num}")
                 return {'maintainers': [secret_author], 'members': []}
             else:
                 logger.debug(f"Falling back to CODEOWNERS")
