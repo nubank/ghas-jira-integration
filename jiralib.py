@@ -510,6 +510,14 @@ class JiraIssue:
         """Update assignee only if current assignee is not a maintainer"""
         if not alert:
             return False
+        
+        # Check if UPDATE_OPEN_ISSUES_ONLY is enabled and skip closed/done issues
+        import sync
+        if sync.UPDATE_OPEN_ISSUES_ONLY:
+            current_status = self.rawissue.fields.status.name.strip().lower()
+            if current_status in ['done', 'concluído', self.endstate.lower()]:
+                logger.debug(f"Skipping closed issue {self.key()} (status: {current_status}) - UPDATE_OPEN_ISSUES_ONLY is enabled")
+                return True  # Return True to indicate no error, but no update needed
             
         # Get current assignee
         current_assignee = None
