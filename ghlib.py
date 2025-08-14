@@ -138,7 +138,7 @@ class GitHub:
             return []
 
     def get_team_members_with_roles(self, org, team_slug):
-        """Get members of a GitHub team with their roles (maintainer/member)"""
+        """Get members of GitHub team with roles (maintainer/member)"""
         try:
             resp = requests.get(
                 f"{self.url}/orgs/{org}/teams/{team_slug}/members?role=all",
@@ -308,13 +308,13 @@ class GHRepository:
 
         for i, pattern_part in enumerate(pattern):
             if pattern_part == '*':
-                score -= 10  # Penalidade para curinga simples
+                score -= 10  # Penalty for *
                 continue
             if pattern_part == '**':
-                score -= 20  # Penalidade maior para curinga duplo
+                score -= 20  # Higher penalty for **
                 continue
             if i >= len(file_path):
-                return pattern, -float('inf') # Penalidade máxima se o padrão for mais longo que o caminho do arquivo
+                return pattern, -float('inf') # Maximum penalty if pattern is longer than file path
 
             position_multiplier = (i + 1)
 
@@ -322,20 +322,20 @@ class GHRepository:
                 score += 40 * position_multiplier
                 consecutive_matches += 1
             else:
-                # Penalidade se a parte do padrão não corresponder à parte do caminho do arquivo
+                # Penalty if pattern part doesn't match file path part
                 score -= 20 * position_multiplier
-                consecutive_matches = 0 # Reset consecutive matches if there is a mismatch
+                consecutive_matches = 0 # Reset if there's a mismatch
 
-            score += consecutive_matches * 50  # Bônus para correspondências consecutivas
+            score += consecutive_matches * 50  # Bonus for consecutive matches
 
-        # Verificação adicional para padrões terminando com curinga (adicionado aqui)
+        # Additional check for patterns ending with *
         last_pattern_part = pattern[-1]
         if last_pattern_part in ('*', '**'):
             if last_pattern_part == '*':
-                # Verifique se a última parte do caminho do arquivo contém a penúltima parte do padrão
+                # Check if the last part of the file path contains the second-to-last part of the pattern
                 if len(pattern) > 1 and len(file_path) > len(pattern) - 2 and pattern[-2] not in file_path[-1]:
-                    score -= 50  # Penalidade se a última parte do padrão não corresponder à parte do caminho do arquivo
-            # Lógica semelhante para '**' pode ser adicionada aqui se necessário
+                    score -= 50  # Penalty if the last part of pattern doesn't match file path part
+            # Similar logic for '**' can be added here if necessary
 
 
         return original_pattern, score
@@ -663,7 +663,7 @@ class Alert(AlertBase):
             if line.startswith('# '):  # Main header
                 if current_section and current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
-                current_section = "Details"  # Changed from "Description" to "Details"
+                current_section = "Details" 
                 current_content = [line.replace('# ', '')]
             elif line.startswith('## '):  # Subheader
                 if current_section and current_content:
@@ -687,7 +687,7 @@ class Alert(AlertBase):
         if full_desc:
             formatted_sections.append(full_desc)
         
-        section_order = ['Details', 'Recommendation', 'Example']  # Changed from "Description" to "Details"
+        section_order = ['Details', 'Recommendation', 'Example'] 
         for section in section_order:
             if section in sections:
                 formatted_sections.append(f"*{section}*\n{sections[section]}")
@@ -812,26 +812,21 @@ class Secret(AlertBase):
                 logger.debug(f"Found commit_sha in location {i}: {commit_sha}")
                 return commit_sha
             
-            # Alternative: check for blob_sha and try to find corresponding commit
             blob_sha = details.get("blob_sha")
             if blob_sha:
                 logger.debug(f"Found blob_sha in location {i}: {blob_sha}")
-                # We could potentially find the commit that contains this blob
-                # but this is more complex and may not be reliable
         
         logger.debug(f"No commit SHA found in any location for alert {self.number()}")
-        # Log the raw location data to understand what GitHub provides
         logger.info(f"Alert {self.number()} location data for analysis: {locations}")
         return None
 
     def get_secret_author(self):
-        """Get the GitHub user who most likely introduced the secret using commit SHA from alert"""
+        """Get the user who introduced the secret using commit SHA from alert"""
         import sync
         
         alert_num = self.number()
         logger.info(f"Starting secret author detection.")
         
-        # Check if feature is enabled
         if not sync.ASSIGN_TO_SECRET_AUTHOR:
             logger.info(f"Secret author assignment disabled for alert {alert_num} (ASSIGN_TO_SECRET_AUTHOR=false) - skipping secret author detection")
             return None
@@ -865,7 +860,6 @@ class Secret(AlertBase):
             else:
                 logger.warning(f"No commit SHA found in alert {alert_num} locations")
             
-            # SIMPLIFIED: No commit SHA in alert, fall back to CODEOWNERS
             logger.info(f"No commit SHA available - falling back to CODEOWNERS assignment for alert {alert_num}")
             logger.info(f"CODEOWNERS fallback will be handled by get_prioritized_assignees() method")
             
@@ -875,10 +869,6 @@ class Secret(AlertBase):
         except Exception as e:
             logger.error(f"ERROR: Exception while finding secret author for alert {alert_num}: {e}")
             return None
-
-    # REMOVED: File commit history method - using ultra-simplified commit SHA only approach
-
-    # REMOVED: Complex secret introduction commit detection - using simplified commit SHA approach instead
 
     def get_commit_details(self, commit_sha):
         """Get detailed information about a specific commit"""
