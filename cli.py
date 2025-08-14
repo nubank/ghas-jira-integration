@@ -18,6 +18,12 @@ handler.setFormatter(anticrlf.LogFormatter("%(levelname)s:%(name)s:%(message)s")
 handler.setLevel(logging.DEBUG)
 root.addHandler(handler)
 
+# Suppress verbose HTTP debug logs from third-party libraries
+logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
+logging.getLogger("requests.packages.urllib3").setLevel(logging.WARNING)
+logging.getLogger("github").setLevel(logging.INFO)
+logging.getLogger("jira").setLevel(logging.INFO)
+
 
 def fail(msg):
     print(msg)

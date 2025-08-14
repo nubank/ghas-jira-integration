@@ -57,40 +57,40 @@ class Sync:
         self.sync(a, self.jira.fetch_issues(a.get_key()), DIRECTION_J2G)
 
     def log_assignment_workflow_summary(self, alert, repo_id):
-        """Log a comprehensive summary of the assignment workflow for debugging"""
+        """Log a summary of the assignment workflow for debugging"""
         if not alert:
             return
             
         alert_num = alert.number()
         alert_type = alert.get_type()
         
-        logger.info(f"ASSIGNMENT WORKFLOW SUMMARY for {alert_type} Alert #{alert_num}")
-        logger.info(f"{'='*60}")
+        # Concise summary at INFO level
+        location = alert.get_location() or 'No location'
+        strategy = "Secret Author -> CODEOWNERS -> Default" if alert_type == "Secret" and ASSIGN_TO_SECRET_AUTHOR else "CODEOWNERS -> Default"
+        logger.info(f"Creating {alert_type} Alert #{alert_num} | Location: {location} | Strategy: {strategy}")
+        
+        # Detailed breakdown at DEBUG level
+        logger.debug(f"ASSIGNMENT WORKFLOW DETAILS for {alert_type} Alert #{alert_num}")
+        logger.debug(f"{'='*60}")
         
         # Basic alert info
-        logger.info(f"Alert Details:")
-        logger.info(f"   Type: {alert_type}")
-        logger.info(f"   Number: #{alert_num}")
-        logger.info(f"   Repository: {repo_id}")
-        logger.info(f"   Location: {alert.get_location() or 'Not available'}")
+        logger.debug(f"Alert Details:")
+        logger.debug(f"   Type: {alert_type}")
+        logger.debug(f"   Number: #{alert_num}")
+        logger.debug(f"   Location: {location}")
         
         if hasattr(alert, 'get_secret_line_numbers'):
             line_numbers = alert.get_secret_line_numbers()
             if line_numbers:
-                logger.info(f"   Lines: {line_numbers}")
+                logger.debug(f"   Lines: {line_numbers}")
         
         # Assignment configuration
-        logger.info(f"⚙️  Configuration:")
-        logger.info(f"   Secret Author Assignment: {'Enabled' if ASSIGN_TO_SECRET_AUTHOR else 'Disabled'}")
-        logger.info(f"   Assignee Updates: {'Enabled' if ENABLE_ASSIGNEE_UPDATES else 'Disabled'}")
+        logger.debug(f"   Secret Author Assignment: {'Enabled' if ASSIGN_TO_SECRET_AUTHOR else 'Disabled'}")
+        logger.debug(f"   Assignee Updates: {'Enabled' if ENABLE_ASSIGNEE_UPDATES else 'Disabled'}")
         
         # Show what the assignment logic will do
-        if alert_type == "Secret" and ASSIGN_TO_SECRET_AUTHOR:
-            logger.info(f"Assignment Strategy: Secret Author Detection -> CODEOWNERS -> Default")
-        else:
-            logger.info(f"Assignment Strategy: CODEOWNERS -> Default")
-            
-        logger.info(f"{'='*60}")
+        logger.debug(f"Assignment Strategy: {strategy}")
+        logger.debug(f"{'='*60}")
 
     def _extract_branch_name(self, branch_ref):
         """Extract clean branch name from GitHub branch reference"""

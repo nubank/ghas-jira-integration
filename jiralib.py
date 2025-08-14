@@ -302,11 +302,11 @@ class JiraProject:
         maintainers = prioritized_assignees.get('maintainers', [])
         members = prioritized_assignees.get('members', [])
         
-        logger.info(f"Assignee candidates for alert {alert_num}: {len(maintainers)} maintainers, {len(members)} members")
+        logger.debug(f"Assignee candidates for alert {alert_num}: {len(maintainers)} maintainers, {len(members)} members")
         if maintainers:
-            logger.info(f"Maintainer candidates: {maintainers}")
+            logger.debug(f"Maintainer candidates: {maintainers}")
         if members:
-            logger.info(f"Member candidates: {members}")
+            logger.debug(f"Member candidates: {members}")
         
         # Try maintainers first
         assigned = False
@@ -314,7 +314,7 @@ class JiraProject:
         
         for assignee_name in maintainers:
             attempted_maintainers.append(assignee_name)
-            logger.info(f"Attempting to assign maintainer '{assignee_name}' to issue for alert {alert_num}")
+            logger.debug(f"Attempting to assign maintainer '{assignee_name}' to issue for alert {alert_num}")
             
             try:
                 assignable_users = self.j._get_json(
@@ -351,7 +351,7 @@ class JiraProject:
             
             for assignee_name in members:
                 attempted_members.append(assignee_name)
-                logger.info(f"Attempting to assign member '{assignee_name}' to issue for alert {alert_num}")
+                logger.debug(f"Attempting to assign member '{assignee_name}' to issue for alert {alert_num}")
                 
                 try:
                     assignable_users = self.j._get_json(
@@ -385,8 +385,7 @@ class JiraProject:
             logger.error(f"ASSIGNMENT FAILED: Could not assign anyone to issue {raw.key} for alert {alert_num}")
             logger.error(f"Attempted assignees: {all_attempted}")
             logger.error(f"This issue will remain unassigned - manual intervention required")
-        else:
-            logger.info(f"FINAL SUCCESS: Issue {raw.key} for alert {alert_num} has been assigned successfully")
+        # Assignment process completed - success already logged above
 
         # Refresh the issue to ensure we have the latest assignee information
         # Add a small delay to allow Jira to process the assignment
