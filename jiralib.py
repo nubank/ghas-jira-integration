@@ -295,9 +295,6 @@ class JiraProject:
         )
 
         valid_assignees = alert.get_valid_assignees()
-
-        # Simple assignment process with minimal logging
-        logger.info(f"Starting process for alert {alert_num}")
         
         prioritized_assignees = alert.get_prioritized_assignees()
         maintainers = prioritized_assignees.get('maintainers', [])
@@ -355,12 +352,6 @@ class JiraProject:
                 except Exception:
                     continue
         
-        # Simple success/fail result
-        if assigned:
-            logger.info(f"Alert {alert_num}: SUCCESS - Assigned")
-        else:
-            logger.info(f"Alert {alert_num}: FAIL - Could not assign to anyone")
-
         # Refresh the issue to ensure we have the latest assignee information
         # Add a small delay to allow Jira to process the assignment
         time.sleep(0.5)  # Wait 500ms for Jira to process the assignment
@@ -579,7 +570,7 @@ class JiraIssue:
             current_status = self.rawissue.fields.status.name.strip().lower()
             assignee_name = self.rawissue.fields.assignee.displayName if has_assignee else "None"
             
-            logger.info(f"Issue {self.key()}: current_status='{current_status}', has_assignee={has_assignee}, assignee='{assignee_name}'")
+            logger.debug(f"Issue {self.key()}: current_status='{current_status}', has_assignee={has_assignee}, assignee='{assignee_name}'")
             
             # Status mapping for normalization
             status_mapping = {
@@ -594,7 +585,7 @@ class JiraIssue:
             }
             
             normalized_status = status_mapping.get(current_status, current_status)
-            logger.info(f"Issue {self.key()}: normalized_status='{normalized_status}'")
+            logger.debug(f"Issue {self.key()}: normalized_status='{normalized_status}'")
             
             # Determine target status based on assignee
             if has_assignee:
@@ -616,7 +607,7 @@ class JiraIssue:
                     else:
                         logger.warning(f"Failed to transition issue {self.key()} to 'To Do'")
                 else:
-                    logger.info(f"Issue {self.key()} has no assignee but is not in 'Waiting Fix' status (current: '{normalized_status}'), no transition needed")
+                    logger.debug(f"Issue {self.key()} has no assignee but is not in 'Waiting Fix' status (current: '{normalized_status}'), no transition needed")
                     
         except Exception as e:
             logger.warning(f"Failed to update status for issue {self.key()} based on assignee: {e}")
@@ -632,9 +623,7 @@ class JiraIssue:
             self.rawissue = self.j.issue(self.rawissue.key)
             transitions = self.j.transitions(self.rawissue)
             available_transitions = {t["name"]: t["id"] for t in transitions}
-            
-            logger.info(f"Available transitions for issue {self.key()}: {list(available_transitions.keys())}")
-            
+                        
             # Try to find a matching transition
             for transition_name in possible_transitions:
                 if transition_name in available_transitions:
@@ -664,9 +653,7 @@ class JiraIssue:
             self.rawissue = self.j.issue(self.rawissue.key)
             transitions = self.j.transitions(self.rawissue)
             available_transitions = {t["name"]: t["id"] for t in transitions}
-            
-            logger.info(f"Available transitions for issue {self.key()}: {list(available_transitions.keys())}")
-            
+                        
             # Try to find a matching transition
             for transition_name in possible_transitions:
                 if transition_name in available_transitions:
@@ -695,9 +682,7 @@ class JiraIssue:
             self.rawissue = self.j.issue(self.rawissue.key)
             transitions = self.j.transitions(self.rawissue)
             available_transitions = {t["name"]: t["id"] for t in transitions}
-            
-            logger.info(f"Available transitions for issue {self.key()}: {list(available_transitions.keys())}")
-            
+                        
             # Try different possible names for the Replanning transition
             replanning_transitions = [
                 "Replanning", "replanning", "REPLANNING",
