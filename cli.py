@@ -29,6 +29,9 @@ logging.getLogger("sync").setLevel(logging.INFO)
 logging.getLogger("jiralib").setLevel(logging.INFO)
 logging.getLogger("ghlib").setLevel(logging.INFO)
 
+# Ensure that even if modules are imported after this, they inherit the correct level
+logging.getLogger("__main__").setLevel(logging.INFO)
+
 
 def fail(msg):
     print(msg)

@@ -296,26 +296,18 @@ class JiraProject:
 
         valid_assignees = alert.get_valid_assignees()
 
-        # Try to assign maintainers first, then fall back to regular members
-        logger.info(f"Starting assignee selection for {alert_type} alert {alert_num} in {repo_id}")
+        # Simple assignment process with minimal logging
+        logger.info(f"Starting process for alert {alert_num}")
+        
         prioritized_assignees = alert.get_prioritized_assignees()
         maintainers = prioritized_assignees.get('maintainers', [])
         members = prioritized_assignees.get('members', [])
         
-        logger.debug(f"Assignee candidates for alert {alert_num}: {len(maintainers)} maintainers, {len(members)} members")
-        if maintainers:
-            logger.debug(f"Maintainer candidates: {maintainers}")
-        if members:
-            logger.debug(f"Member candidates: {members}")
+        assigned = False
+        assigned_user = None
         
         # Try maintainers first
-        assigned = False
-        attempted_maintainers = []
-        
         for assignee_name in maintainers:
-            attempted_maintainers.append(assignee_name)
-            logger.debug(f"Attempting to assign maintainer '{assignee_name}' to issue for alert {alert_num}")
-            
             try:
                 assignable_users = self.j._get_json(
                     'user/assignable/search',
@@ -332,27 +324,15 @@ class JiraProject:
                         f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                         json={'accountId': account_id}
                     )
-                    logger.debug(f"SUCCESS: Assigned maintainer '{assignee_name}' to issue {raw.key} for alert {alert_num}")
                     assigned = True
+                    assigned_user = assignee_name
                     break
-                else:
-                    logger.debug(f"Maintainer '{assignee_name}' not found in assignable users for project {self.projectkey} (alert {alert_num})")
-                    continue
-            except Exception as e:
-                logger.error(f"Failed to assign maintainer '{assignee_name}' to issue {raw.key} (alert {alert_num}): {e}")
+            except Exception:
                 continue
 
         # If no maintainer could be assigned, try regular members
-        attempted_members = []
-        
         if not assigned:
-            if attempted_maintainers:
-                logger.debug(f"No maintainers could be assigned for alert {alert_num} (tried: {attempted_maintainers}), trying members...")
-            
             for assignee_name in members:
-                attempted_members.append(assignee_name)
-                logger.debug(f"Attempting to assign member '{assignee_name}' to issue for alert {alert_num}")
-                
                 try:
                     assignable_users = self.j._get_json(
                         'user/assignable/search',
@@ -369,21 +349,17 @@ class JiraProject:
                             f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                             json={'accountId': account_id}
                         )
-                        logger.debug(f"SUCCESS: Assigned member '{assignee_name}' to issue {raw.key} for alert {alert_num}")
                         assigned = True
+                        assigned_user = assignee_name
                         break
-                    else:
-                        logger.debug(f"Member '{assignee_name}' not found in assignable users for project {self.projectkey} (alert {alert_num})")
-                        continue
-                except Exception as e:
-                    logger.error(f"Failed to assign member '{assignee_name}' to issue {raw.key} (alert {alert_num}): {e}")
+                except Exception:
                     continue
         
-        # Final assignment summary
-        if not assigned:
-            all_attempted = attempted_maintainers + attempted_members
-            logger.warning(f"Could not assign anyone to issue {raw.key} for alert {alert_num} (tried: {len(all_attempted)} users)")
-        # Assignment process completed - success already logged above
+        # Simple success/fail result
+        if assigned:
+            logger.info(f"Alert {alert_num}: SUCCESS - Assigned to {assigned_user}")
+        else:
+            logger.info(f"Alert {alert_num}: FAIL - Could not assign to anyone")
 
         # Refresh the issue to ensure we have the latest assignee information
         # Add a small delay to allow Jira to process the assignment
@@ -392,22 +368,11 @@ class JiraProject:
         raw = self.j.issue(raw.key)
         jira_issue = JiraIssue(self, raw)
         
-        # Log the current assignee state after refresh for debugging
-        has_assignee_after_refresh = (hasattr(raw.fields, 'assignee') and raw.fields.assignee is not None)
-        assignee_after_refresh = raw.fields.assignee.displayName if has_assignee_after_refresh else "None"
-        logger.info(f"After refresh - Issue {raw.key}: assigned={assigned}, has_assignee={has_assignee_after_refresh}, assignee='{assignee_after_refresh}'")
-        
-        # Always update status based on current assignee state
-        # This ensures that the status is correct regardless of when the assignee was set
+        # Update status based on assignee state
         jira_issue.update_status_based_on_assignee()
         
-        logger.info(f"ISSUE CREATED: {raw.key} for {alert_type} alert {alert_num} in {repo_id}")
-        logger.info(f"Issue Summary: {raw.key}")
-        logger.info(f"   Alert: {alert_type} #{alert_num}")
-        logger.info(f"   Repository: {repo_id}")
-        logger.info(f"   Assignee: {assignee_after_refresh}")
-        logger.info(f"   Status: {'Assigned' if has_assignee_after_refresh else 'Unassigned'}")
-        logger.info(f"   URL: {self.j._options['server']}/browse/{raw.key}")
+        # Simple issue creation confirmation
+        logger.info(f"Issue created: {raw.key} for alert {alert_num}")
 
         return jira_issue
 
