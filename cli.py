@@ -29,14 +29,11 @@ logging.getLogger("sync").setLevel(logging.INFO)
 logging.getLogger("jiralib").setLevel(logging.INFO)
 logging.getLogger("ghlib").setLevel(logging.INFO)
 
-# Ensure that even if modules are imported after this, they inherit the correct level
 logging.getLogger("__main__").setLevel(logging.INFO)
-
 
 def fail(msg):
     print(msg)
     sys.exit(1)
-
 
 def direction_str_to_num(dstr):
     if dstr == "gh2jira":
@@ -68,10 +65,8 @@ def serve(args):
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
     
-    # Determine auto-transition setting
     auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
     
-    # Set secret author assignment if specified
     if hasattr(args, 'assign_secret_author') and args.assign_secret_author:
         import os
         os.environ['ASSIGN_TO_SECRET_AUTHOR'] = 'true'
@@ -88,7 +83,6 @@ def serve(args):
         direction=direction_str_to_num(args.direction),
     )
     server.run_server(s, args.secret, port=args.port)
-
 
 def sync(args):
     if not args.gh_url or not args.jira_url:
@@ -112,10 +106,8 @@ def sync(args):
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
     
-    # Determine auto-transition setting
     auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
     
-    # Set secret author assignment if specified
     if hasattr(args, 'assign_secret_author') and args.assign_secret_author:
         import os
         os.environ['ASSIGN_TO_SECRET_AUTHOR'] = 'true'
@@ -147,7 +139,6 @@ def sync(args):
     elif args.state_issue:
         jira_project.save_repo_state(repo_id, state, args.state_issue)
 
-
 def update_assignees(args):
     if not args.gh_url or not args.jira_url:
         fail("Both GitHub and JIRA URL have to be specified!")
@@ -166,14 +157,11 @@ def update_assignees(args):
 
     repo_id = args.gh_org + "/" + args.gh_repo
 
-    # create connections
     github = ghlib.GitHub(args.gh_url, args.gh_token)
     jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
     
-    # Determine auto-transition setting
     auto_transition = not args.no_auto_transition if hasattr(args, 'no_auto_transition') else True
     
-    # Set secret author assignment if specified
     if hasattr(args, 'assign_secret_author') and args.assign_secret_author:
         import os
         os.environ['ASSIGN_TO_SECRET_AUTHOR'] = 'true'
@@ -187,17 +175,15 @@ def update_assignees(args):
     )
 
     # Update assignees for existing issues
-    sync = Sync(github, jira_project, DIRECTION_G2J)  # Direction doesn't matter for this operation
+    sync = Sync(github, jira_project, DIRECTION_G2J) 
     updated_count, failed_count = sync.update_existing_assignees(repo_id)
     
     print(f"Update completed for repository {repo_id}:")
     print(f"  Successfully updated: {updated_count} issues")
     print(f"  Failed to update: {failed_count} issues")
 
-
 def check_hooks(args):
     pass
-
 
 def install_hooks(args):
     if not args.hook_url:
@@ -232,7 +218,6 @@ def install_hooks(args):
         jira = jiralib.Jira(args.jira_url, args.jira_user, args.jira_token)
         jira.create_hook("github_jira_synchronization_hook", args.hook_url, args.secret)
 
-
 def list_hooks(args):
     if not args.gh_url and not args.jira_url:
         fail("Neither GitHub nor JIRA URL specified!")
@@ -265,7 +250,6 @@ def list_hooks(args):
 
         for h in jira.list_hooks():
             print(json.dumps(h, indent=4))
-
 
 def main():
     credential_base = argparse.ArgumentParser(add_help=False)

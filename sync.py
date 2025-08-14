@@ -9,11 +9,8 @@ DIRECTION_G2J = 1
 DIRECTION_J2G = 2
 DIRECTION_BOTH = 3
 
-# Configuration flag to enable/disable assignee updates for existing issues
 ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'false').lower() in ('true', '1', 'yes')
 
-# Configuration flag to enable/disable secret author assignment
-# Can be controlled via environment variable ASSIGN_TO_SECRET_AUTHOR (default: true)
 ASSIGN_TO_SECRET_AUTHOR = os.getenv('ASSIGN_TO_SECRET_AUTHOR', 'true').lower() in ('true', '1', 'yes')
 
 
@@ -37,7 +34,6 @@ class Sync:
         self.sync(a, self.jira.fetch_issues(a.get_key()), DIRECTION_G2J)
         
     def alert_reappeared(self, repo_id, alert_num, branch_ref="unknown"):
-        """Handle alert reappearing in branch after being fixed"""
         a = self.github.getRepository(repo_id).get_alert(alert_num)
         self.sync(a, self.jira.fetch_issues(a.get_key()), DIRECTION_G2J, recent_event="reappeared_in_branch", branch_ref=branch_ref)
 
@@ -59,21 +55,15 @@ class Sync:
     def log_assignment_workflow_summary(self, alert, repo_id):
         if not alert:
             return
-            
         alert_num = alert.number()
         logger.info(f"========================================================================")
         logger.info(f"Creating issue for alert {alert_num} - Started")
 
     def _extract_branch_name(self, branch_ref):
-        """Extract clean branch name from GitHub branch reference"""
         if not branch_ref:
             return "unknown"
-        
-        # Handle full refs like "refs/heads/master" or "refs/heads/main"
         if branch_ref.startswith("refs/heads/"):
             return branch_ref.replace("refs/heads/", "")
-        
-        # Handle direct branch names
         return branch_ref
 
     def sync(self, alert, issues, in_direction, recent_event=None, branch_ref=None):
@@ -84,17 +74,12 @@ class Sync:
                 i.delete()
             return None
 
-        # REAPPEARANCE LOGIC:
-        # When alert reappears in branch, create a NEW ticket while preserving existing Done tickets.
-        # This maintains audit trail while providing fresh tracking for the reappeared issue.
         create_new_ticket = False
         
         if alert.get_state() is True and len(issues) > 0:
-            # Check if we have a recent "reappeared_in_branch" event
             if recent_event == "reappeared_in_branch":
                 branch_name = self._extract_branch_name(branch_ref) if branch_ref else "unknown"
                 
-                # Look for done/closed issues - if found, create new ticket for reappearance
                 for i in issues:
                     current_status = i.rawissue.fields.status.name.strip().lower()
                     if current_status in ['done', 'concluído', self.jira.endstate.lower()]:
@@ -108,7 +93,6 @@ class Sync:
                         create_new_ticket = True
                         break
                         
-                # If no done issues found but we have open issues, continue with existing ticket
                 if not create_new_ticket:
                     logger.info(
                         "Alert {alert_num} in {repo_id} reappeared in branch {branch} but has open tickets. Using existing ticket.".format(
@@ -118,12 +102,9 @@ class Sync:
                         )
                     )
 
-        # Create a new issue if there are no issues or if the alert reappeared after being fixed
         if len(issues) == 0 or create_new_ticket:
-            # Log comprehensive workflow summary before creating issue
             self.log_assignment_workflow_summary(alert, alert.github_repo.repo_id)
             
-            # Prepare reappearance context for JIRA issue
             reappear_context = None
             if create_new_ticket and recent_event == "reappeared_in_branch":
                 branch_name = self._extract_branch_name(branch_ref) if branch_ref else "unknown"
@@ -157,7 +138,6 @@ class Sync:
                  
             newissue.adjust_state(alert.get_state())
             
-            # If we created a new ticket for a reappeared alert, we're done here
             if create_new_ticket:
                 return alert.get_state()
                 
@@ -188,8 +168,6 @@ class Sync:
 
         issue = issues[0]
 
-        # Update assignee for existing issues to ensure maintainers are prioritized
-        # This can be disabled by setting ENABLE_ASSIGNEE_UPDATES = False
         if alert and ENABLE_ASSIGNEE_UPDATES:
             issue.update_assignee_if_needed(alert)
 
@@ -243,7 +221,6 @@ class Sync:
         for akey, (alert, issues) in pairs.items():
             past_state_info = states.get(akey, None)
             
-            # Handle both old format (boolean) and new format (dict with state and metadata)
             if isinstance(past_state_info, bool):
                 past_state = past_state_info
             elif isinstance(past_state_info, dict):
@@ -270,11 +247,10 @@ class Sync:
                 }
 
     def update_existing_assignees(self, repo_id):
-        """Update assignees for all existing issues in a repository to prioritize maintainers"""
+        #Update assignees for all existing issues in a repository to prioritize maintainers
         if not ENABLE_ASSIGNEE_UPDATES:
             logger.info("Assignee updates are disabled (ENABLE_ASSIGNEE_UPDATES = False)")
             return 0, 0
-            
         logger.info(
             "Updating assignees for existing issues in repository {repo_id}...".format(repo_id=repo_id)
         )
