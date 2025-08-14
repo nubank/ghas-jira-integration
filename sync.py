@@ -62,6 +62,7 @@ class Sync:
             return
             
         alert_num = alert.number()
+        logger.info(f"================================================")
         logger.info(f"Creating issue for alert {alert_num}")
 
     def _extract_branch_name(self, branch_ref):

@@ -587,19 +587,16 @@ class JiraIssue:
             normalized_status = status_mapping.get(current_status, current_status)
             logger.debug(f"Issue {self.key()}: normalized_status='{normalized_status}'")
             
-            # Determine target status based on assignee
             if has_assignee:
-                # If assigned but still in "To Do", move to "Waiting Fix"
                 if normalized_status == 'to do':
                     logger.info(f"Issue {self.key()} has assignee and is in 'To Do', transitioning to 'Waiting Fix'")
                     if self.transition_to_waiting_fix():
-                        logger.info(f"Issue {self.key()} successfully moved to 'Waiting Fix' status after assignment")
+                        logger.debug(f"Issue {self.key()} successfully moved to 'Waiting Fix' status after assignment")
                     else:
                         logger.warning(f"Failed to transition issue {self.key()} to 'Waiting Fix'")
                 else:
                     logger.info(f"Issue {self.key()} has assignee but is not in 'To Do' status (current: '{normalized_status}'), no transition needed")
             else:
-                # If unassigned but in "Waiting Fix", move back to "To Do"
                 if normalized_status == 'waiting fix':
                     logger.info(f"Issue {self.key()} has no assignee and is in 'Waiting Fix', transitioning to 'To Do'")
                     if self.transition_to_todo():
@@ -619,7 +616,6 @@ class JiraIssue:
         ]
         
         try:
-            # Refresh the issue to get current state
             self.rawissue = self.j.issue(self.rawissue.key)
             transitions = self.j.transitions(self.rawissue)
             available_transitions = {t["name"]: t["id"] for t in transitions}
@@ -627,7 +623,6 @@ class JiraIssue:
             # Try to find a matching transition
             for transition_name in possible_transitions:
                 if transition_name in available_transitions:
-                    logger.info(f"Found matching transition '{transition_name}' for issue {self.key()}")
                     self.j.transition_issue(self.rawissue, available_transitions[transition_name])
                     logger.info(f"Successfully transitioned issue {self.key()} to '{transition_name}'")
                     return True
@@ -657,7 +652,6 @@ class JiraIssue:
             # Try to find a matching transition
             for transition_name in possible_transitions:
                 if transition_name in available_transitions:
-                    logger.info(f"Found matching transition '{transition_name}' for issue {self.key()}")
                     self.j.transition_issue(self.rawissue, available_transitions[transition_name])
                     logger.info(f"Successfully transitioned issue {self.key()} to '{transition_name}'")
                     return True

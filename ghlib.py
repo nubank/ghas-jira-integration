@@ -917,7 +917,6 @@ class Secret(AlertBase):
         logger.info(f"Determining assignee for secret alert {alert_num}")
         
         if sync.ASSIGN_TO_SECRET_AUTHOR:
-            logger.info(f"Secret author assignment enabled - attempting to find author for alert {alert_num}")
             secret_author = self.get_secret_author()
             
             if secret_author:
