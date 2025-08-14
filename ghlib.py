@@ -124,7 +124,7 @@ class GitHub:
         return resp.json()
 
     def get_team_members(self, org, team_slug):
-        """Get members of a GitHub team"""
+        """Get members of team"""
         try:
             resp = requests.get(
                 f"{self.url}/orgs/{org}/teams/{team_slug}/members",
@@ -838,7 +838,7 @@ class Secret(AlertBase):
             
         file_path = self.get_location()
         if not file_path:
-            logger.warning(f"No file path found for secret alert {alert_num} - cannot determine author")
+            logger.warning(f"No file path found for secret alert {alert_num} - cannot determine author.")
             return None
             
         logger.info(f"Secret alert {alert_num} found in file: {file_path}")
@@ -921,7 +921,7 @@ class Secret(AlertBase):
             logger.info(f"Secret author assignment disabled for alert {alert_num} (ASSIGN_TO_SECRET_AUTHOR=false), using CODEOWNERS")
         
         # Fall back to standard CODEOWNERS-based assignment
-        logger.info(f"Using CODEOWNERS-based assignment for alert {alert_num}")
+        logger.info(f"Using CODEOWNERS-based assignment.")
         codeowners_result = super().get_prioritized_assignees()
         
         if codeowners_result and (codeowners_result.get('maintainers') or codeowners_result.get('members')):
@@ -939,6 +939,6 @@ class Secret(AlertBase):
             if primary_assignee:
                 logger.info(f"PRIMARY ASSIGNEE for alert {alert_num}: {primary_assignee} (from CODEOWNERS)")
         else:
-            logger.warning(f"No CODEOWNERS found, will use manual assignment")
+            logger.warning(f"No CODEOWNERS found, will use manual assignment.")
         
         return codeowners_result
