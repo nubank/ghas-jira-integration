@@ -57,13 +57,12 @@ class Sync:
         self.sync(a, self.jira.fetch_issues(a.get_key()), DIRECTION_J2G)
 
     def log_assignment_workflow_summary(self, alert, repo_id):
-        """Log a simple workflow start message"""
         if not alert:
             return
             
         alert_num = alert.number()
         logger.info(f"================================================")
-        logger.info(f"Creating issue for alert {alert_num}")
+        logger.info(f"Creating issue for alert {alert_num} - Started")
 
     def _extract_branch_name(self, branch_ref):
         """Extract clean branch name from GitHub branch reference"""

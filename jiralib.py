@@ -363,7 +363,7 @@ class JiraProject:
         jira_issue.update_status_based_on_assignee()
         
         # Simple issue creation confirmation
-        logger.info(f"Issue created: {raw.key} for alert {alert_num}")
+        logger.info(f"Issue {raw.key} created for alert {alert_num} - Finished")
 
         return jira_issue
 
@@ -589,7 +589,7 @@ class JiraIssue:
             
             if has_assignee:
                 if normalized_status == 'to do':
-                    logger.info(f"Issue {self.key()} has assignee and is in 'To Do', transitioning to 'Waiting Fix'")
+                    logger.info(f"Issue has assignee and is in 'To Do', transitioning to 'Waiting Fix'")
                     if self.transition_to_waiting_fix():
                         logger.debug(f"Issue {self.key()} successfully moved to 'Waiting Fix' status after assignment")
                     else:
@@ -624,7 +624,7 @@ class JiraIssue:
             for transition_name in possible_transitions:
                 if transition_name in available_transitions:
                     self.j.transition_issue(self.rawissue, available_transitions[transition_name])
-                    logger.info(f"Successfully transitioned issue {self.key()} to '{transition_name}'")
+                    logger.info(f"Successfully transitioned issue to '{transition_name}'")
                     return True
                     
             logger.warning(f"No 'Waiting Fix' transition available for issue {self.key()}. Available transitions: {list(available_transitions.keys())}")
@@ -653,7 +653,7 @@ class JiraIssue:
             for transition_name in possible_transitions:
                 if transition_name in available_transitions:
                     self.j.transition_issue(self.rawissue, available_transitions[transition_name])
-                    logger.info(f"Successfully transitioned issue {self.key()} to '{transition_name}'")
+                    logger.info(f"Successfully transitioned issue to '{transition_name}'")
                     return True
                     
             logger.warning(f"No 'To Do' transition available for issue {self.key()}. Available transitions: {list(available_transitions.keys())}")
@@ -689,7 +689,7 @@ class JiraIssue:
                 if transition_name in available_transitions:
                     logger.info(f"Found transition '{transition_name}' for issue {self.key()}")
                     self.j.transition_issue(self.rawissue, available_transitions[transition_name])
-                    logger.info(f"Successfully transitioned issue {self.key()} to {transition_name}")
+                    logger.info(f"Successfully transitioned issue to {transition_name}")
                     return True
             
             # If no specific Replanning transition found, try to reopen to To Do

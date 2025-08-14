@@ -826,11 +826,10 @@ class Secret(AlertBase):
 
     def get_secret_author(self):
         """Get the GitHub user who most likely introduced the secret using commit SHA from alert"""
-        # Import here to avoid circular imports
         import sync
         
         alert_num = self.number()
-        logger.info(f"Starting secret author detection for alert {alert_num}")
+        logger.info(f"Starting secret author detection.")
         
         # Check if feature is enabled
         if not sync.ASSIGN_TO_SECRET_AUTHOR:
@@ -906,16 +905,10 @@ class Secret(AlertBase):
             logger.warning(f"Failed to get commit details for {commit_sha}: {e}")
             return None
 
-    # REMOVED: Complex commit line analysis - using simplified commit SHA approach instead
-
     def get_prioritized_assignees(self):
         """Override to prioritize secret author when feature is enabled"""
-        # Import here to avoid circular imports
         import sync
-        
-        alert_num = self.number()
-        logger.info(f"Determining assignee for secret alert {alert_num}")
-        
+        alert_num = self.number()        
         if sync.ASSIGN_TO_SECRET_AUTHOR:
             secret_author = self.get_secret_author()
             
@@ -923,7 +916,7 @@ class Secret(AlertBase):
                 logger.info(f"ASSIGNMENT SUCCESS: Prioritizing secret author '{secret_author}' for alert {alert_num}")
                 return {'maintainers': [secret_author], 'members': []}
             else:
-                logger.warning(f"Secret author not found for alert {alert_num}, falling back to CODEOWNERS")
+                logger.debug(f"Falling back to CODEOWNERS")
         else:
             logger.info(f"Secret author assignment disabled for alert {alert_num} (ASSIGN_TO_SECRET_AUTHOR=false), using CODEOWNERS")
         
@@ -946,8 +939,6 @@ class Secret(AlertBase):
             if primary_assignee:
                 logger.info(f"PRIMARY ASSIGNEE for alert {alert_num}: {primary_assignee} (from CODEOWNERS)")
         else:
-            logger.warning(f"No CODEOWNERS found for alert {alert_num}, will use default assignment")
+            logger.warning(f"No CODEOWNERS found, will use manual assignment")
         
         return codeowners_result
-
-    # REMOVED: Smart commit detection - using ultra-simplified commit SHA only approach    
