@@ -39,6 +39,10 @@ inputs:
     description: 'Assign secret scanning issues to the person who introduced the secret (requires additional GitHub API calls)'
     required: false
     default: 'false'
+  update_open_issues_only:
+    description: 'Update assignees only for open issues (skip closed/done issues)'
+    required: false
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -56,6 +60,7 @@ runs:
       INPUTS_ISSUE_END_STATE: ${{ inputs.issue_end_state }}
       INPUTS_ISSUE_REOPEN_STATE: ${{ inputs.issue_reopen_state }}
       INPUTS_ASSIGN_SECRET_AUTHOR: ${{ inputs.assign_secret_author }}
+      INPUTS_UPDATE_OPEN_ISSUES_ONLY: ${{ inputs.update_open_issues_only }}
     run: |
       pip3 install -r requirements.txt
       REPOSITORY_NAME="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f 2)"

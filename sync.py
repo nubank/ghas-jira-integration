@@ -9,7 +9,9 @@ DIRECTION_G2J = 1
 DIRECTION_J2G = 2
 DIRECTION_BOTH = 3
 
-ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'true').lower() in ('true', '1', 'yes')
+ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'false').lower() in ('true', '1', 'yes')
+
+UPDATE_OPEN_ISSUES_ONLY = os.getenv('UPDATE_OPEN_ISSUES_ONLY', 'true').lower() in ('true', '1', 'yes')
 
 ASSIGN_TO_SECRET_AUTHOR = os.getenv('ASSIGN_TO_SECRET_AUTHOR', 'true').lower() in ('true', '1', 'yes')
 
@@ -314,16 +316,30 @@ class Sync:
         if not ENABLE_ASSIGNEE_UPDATES:
             logger.info("Assignee updates are disabled (ENABLE_ASSIGNEE_UPDATES = False)")
             return 0, 0
+        
+        filter_mode = "open issues only" if UPDATE_OPEN_ISSUES_ONLY else "all issues"
         logger.info(
-            "Updating assignees for existing issues in repository {repo_id}...".format(repo_id=repo_id)
+            "Updating assignees for existing issues in repository {repo_id} ({filter_mode})...".format(
+                repo_id=repo_id, filter_mode=filter_mode
+            )
         )
 
         repo = self.github.getRepository(repo_id)
         updated_count = 0
         failed_count = 0
+        skipped_count = 0
 
         # Get all existing issues for this repository
-        for issue in self.jira.fetch_issues(repo.get_key()):
+        all_issues = self.jira.fetch_issues(repo.get_key())
+        
+        for issue in all_issues:
+            # If UPDATE_OPEN_ISSUES_ONLY is enabled, skip closed/done issues
+            if UPDATE_OPEN_ISSUES_ONLY:
+                current_status = issue.rawissue.fields.status.name.strip().lower()
+                if current_status in ['done', 'concluído', self.jira.endstate.lower()]:
+                    logger.debug(f"Skipping closed issue {issue.key()} (status: {current_status})")
+                    skipped_count += 1
+                    continue
             try:
                 # Parse the alert info from the issue
                 repo_id_from_issue, alert_num, _, _, _ = issue.get_alert_info()
@@ -348,10 +364,17 @@ class Sync:
                 logger.error(f"Error updating assignee for issue {issue.key()}: {e}")
                 failed_count += 1
 
-        logger.info(
-            "Finished updating assignees for repository {repo_id}. Updated: {updated}, Failed: {failed}".format(
-                repo_id=repo_id, updated=updated_count, failed=failed_count
+        if UPDATE_OPEN_ISSUES_ONLY and skipped_count > 0:
+            logger.info(
+                "Finished updating assignees for repository {repo_id}. Updated: {updated}, Failed: {failed}, Skipped (closed): {skipped}".format(
+                    repo_id=repo_id, updated=updated_count, failed=failed_count, skipped=skipped_count
+                )
             )
-        )
+        else:
+            logger.info(
+                "Finished updating assignees for repository {repo_id}. Updated: {updated}, Failed: {failed}".format(
+                    repo_id=repo_id, updated=updated_count, failed=failed_count
+                )
+            )
         
         return updated_count, failed_count

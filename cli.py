@@ -166,6 +166,10 @@ def update_assignees(args):
         import os
         os.environ['ASSIGN_TO_SECRET_AUTHOR'] = 'true'
     
+    if hasattr(args, 'open_issues_only') and args.open_issues_only:
+        import os
+        os.environ['UPDATE_OPEN_ISSUES_ONLY'] = 'true'
+    
     jira_project = jira.getProject(
         args.jira_project,
         args.issue_end_state or "Done",
@@ -360,6 +364,12 @@ def main():
         parents=[credential_base, issue_state_base],
         help="Update assignees for existing JIRA issues to prioritize maintainers",
         description="Update assignees for existing JIRA issues to prioritize maintainers",
+    )
+    update_assignees_parser.add_argument(
+        "--open-issues-only",
+        help="Update assignees only for open issues (skip closed/done issues)",
+        action="store_true",
+        default=False,
     )
     update_assignees_parser.set_defaults(func=update_assignees)
 

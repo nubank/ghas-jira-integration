@@ -461,7 +461,7 @@ class JiraIssue:
                     logger.debug(f"Maintainer {assignee_name} not found in assignable users for project {self.project.projectkey}")
                     continue
             except Exception as e:
-                logger.warning(f"Failed to assign maintainer {assignee_name} to issue {self.key()}: {e}")
+                logger.debug(f"Failed to assign maintainer {assignee_name} to issue {self.key()}: {e}")
                 continue
 
         # If no maintainer could be assigned, try regular members
@@ -526,7 +526,7 @@ class JiraIssue:
         maintainers = prioritized_assignees.get('maintainers', [])
         
         if current_assignee in maintainers:
-            logger.info(f"Issue {self.key()} already assigned to maintainer {current_assignee}, no update needed")
+            logger.info(f"Issue {self.key()} already assigned , no update needed.")
             return True
         else:
             logger.info(f"Issue {self.key()} assigned to non-maintainer {current_assignee}, updating to prioritize maintainers...")

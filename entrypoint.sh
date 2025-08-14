@@ -1,5 +1,10 @@
 #!/bin/sh
 REPOSITORY_NAME="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f 2)"
+
+# Set environment variable for open issues only feature
+if [ "$INPUT_UPDATE_OPEN_ISSUES_ONLY" = "true" ]; then
+    export UPDATE_OPEN_ISSUES_ONLY=true
+fi
 cd / && pipenv run /gh2jira sync \
                             --gh-url "$GITHUB_API_URL" \
                             --gh-token "$INPUT_GITHUB_TOKEN" \
