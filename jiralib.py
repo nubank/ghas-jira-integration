@@ -332,11 +332,11 @@ class JiraProject:
                         f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                         json={'accountId': account_id}
                     )
-                    logger.info(f"SUCCESS: Assigned maintainer '{assignee_name}' to issue {raw.key} for alert {alert_num}")
+                    logger.debug(f"SUCCESS: Assigned maintainer '{assignee_name}' to issue {raw.key} for alert {alert_num}")
                     assigned = True
                     break
                 else:
-                    logger.warning(f"Maintainer '{assignee_name}' not found in assignable users for project {self.projectkey} (alert {alert_num})")
+                    logger.debug(f"Maintainer '{assignee_name}' not found in assignable users for project {self.projectkey} (alert {alert_num})")
                     continue
             except Exception as e:
                 logger.error(f"Failed to assign maintainer '{assignee_name}' to issue {raw.key} (alert {alert_num}): {e}")
@@ -347,7 +347,7 @@ class JiraProject:
         
         if not assigned:
             if attempted_maintainers:
-                logger.warning(f"No maintainers could be assigned for alert {alert_num} (tried: {attempted_maintainers}), trying members...")
+                logger.debug(f"No maintainers could be assigned for alert {alert_num} (tried: {attempted_maintainers}), trying members...")
             
             for assignee_name in members:
                 attempted_members.append(assignee_name)
@@ -369,11 +369,11 @@ class JiraProject:
                             f"{self.j._options['server']}/rest/api/2/issue/{raw.key}/assignee",
                             json={'accountId': account_id}
                         )
-                        logger.info(f"SUCCESS: Assigned member '{assignee_name}' to issue {raw.key} for alert {alert_num}")
+                        logger.debug(f"SUCCESS: Assigned member '{assignee_name}' to issue {raw.key} for alert {alert_num}")
                         assigned = True
                         break
                     else:
-                        logger.warning(f"Member '{assignee_name}' not found in assignable users for project {self.projectkey} (alert {alert_num})")
+                        logger.debug(f"Member '{assignee_name}' not found in assignable users for project {self.projectkey} (alert {alert_num})")
                         continue
                 except Exception as e:
                     logger.error(f"Failed to assign member '{assignee_name}' to issue {raw.key} (alert {alert_num}): {e}")
@@ -382,9 +382,7 @@ class JiraProject:
         # Final assignment summary
         if not assigned:
             all_attempted = attempted_maintainers + attempted_members
-            logger.error(f"ASSIGNMENT FAILED: Could not assign anyone to issue {raw.key} for alert {alert_num}")
-            logger.error(f"Attempted assignees: {all_attempted}")
-            logger.error(f"This issue will remain unassigned - manual intervention required")
+            logger.warning(f"Could not assign anyone to issue {raw.key} for alert {alert_num} (tried: {len(all_attempted)} users)")
         # Assignment process completed - success already logged above
 
         # Refresh the issue to ensure we have the latest assignee information

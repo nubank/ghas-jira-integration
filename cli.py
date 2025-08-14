@@ -24,6 +24,11 @@ logging.getLogger("requests.packages.urllib3").setLevel(logging.WARNING)
 logging.getLogger("github").setLevel(logging.INFO)
 logging.getLogger("jira").setLevel(logging.INFO)
 
+# Set application loggers to INFO level by default (suppress debug messages)
+logging.getLogger("sync").setLevel(logging.INFO)
+logging.getLogger("jiralib").setLevel(logging.INFO)
+logging.getLogger("ghlib").setLevel(logging.INFO)
+
 
 def fail(msg):
     print(msg)
