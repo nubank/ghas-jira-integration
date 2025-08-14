@@ -357,7 +357,7 @@ class JiraProject:
         
         # Simple success/fail result
         if assigned:
-            logger.info(f"Alert {alert_num}: SUCCESS - Assigned to {assigned_user}")
+            logger.info(f"Alert {alert_num}: SUCCESS - Assigned")
         else:
             logger.info(f"Alert {alert_num}: FAIL - Could not assign to anyone")
 

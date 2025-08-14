@@ -57,40 +57,13 @@ class Sync:
         self.sync(a, self.jira.fetch_issues(a.get_key()), DIRECTION_J2G)
 
     def log_assignment_workflow_summary(self, alert, repo_id):
-        """Log a summary of the assignment workflow for debugging"""
+        """Log a simple workflow start message"""
         if not alert:
             return
             
         alert_num = alert.number()
-        alert_type = alert.get_type()
-        
-        # Concise summary at INFO level
-        location = alert.get_location() or 'No location'
-        strategy = "Secret Author -> CODEOWNERS -> Default" if alert_type == "Secret" and ASSIGN_TO_SECRET_AUTHOR else "CODEOWNERS -> Default"
-        logger.info(f"Creating {alert_type} Alert #{alert_num} | Location: {location} | Strategy: {strategy}")
-        
-        # Detailed breakdown at DEBUG level
-        logger.debug(f"ASSIGNMENT WORKFLOW DETAILS for {alert_type} Alert #{alert_num}")
-        logger.debug(f"{'='*60}")
-        
-        # Basic alert info
-        logger.debug(f"Alert Details:")
-        logger.debug(f"   Type: {alert_type}")
-        logger.debug(f"   Number: #{alert_num}")
-        logger.debug(f"   Location: {location}")
-        
-        if hasattr(alert, 'get_secret_line_numbers'):
-            line_numbers = alert.get_secret_line_numbers()
-            if line_numbers:
-                logger.debug(f"   Lines: {line_numbers}")
-        
-        # Assignment configuration
-        logger.debug(f"   Secret Author Assignment: {'Enabled' if ASSIGN_TO_SECRET_AUTHOR else 'Disabled'}")
-        logger.debug(f"   Assignee Updates: {'Enabled' if ENABLE_ASSIGNEE_UPDATES else 'Disabled'}")
-        
-        # Show what the assignment logic will do
-        logger.debug(f"Assignment Strategy: {strategy}")
-        logger.debug(f"{'='*60}")
+        # Simple start message following the same pattern as jiralib
+        logger.info(f"Creating issue for alert {alert_num}")
 
     def _extract_branch_name(self, branch_ref):
         """Extract clean branch name from GitHub branch reference"""
