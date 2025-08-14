@@ -851,14 +851,14 @@ class Secret(AlertBase):
                     
                     logger.warning(f"Could not get author details from commit {secret_commit_sha} for alert {alert_num}")
                 else:
-                    logger.warning(f"Could not retrieve commit details for {secret_commit_sha} from alert {alert_num}")
+                    logger.debug(f"Could not retrieve commit details for {secret_commit_sha} from alert {alert_num}")
             else:
                 logger.warning(f"No commit SHA found in alert {alert_num} locations")
             
-            logger.info(f"No commit SHA available - falling back to CODEOWNERS assignment for alert {alert_num}")
-            logger.info(f"CODEOWNERS fallback will be handled by get_prioritized_assignees() method")
+            logger.debug(f"No commit SHA available - falling back to CODEOWNERS assignment for alert {alert_num}")
+            logger.debug(f"CODEOWNERS fallback will be handled by get_prioritized_assignees() method")
             
-            logger.warning(f"Could not determine secret author for alert {alert_num} via any method")
+            logger.debug(f"Could not determine secret author for alert {alert_num} via any method")
             return None
             
         except Exception as e:
@@ -887,7 +887,7 @@ class Secret(AlertBase):
             return commit_data
             
         except Exception as e:
-            logger.warning(f"Failed to get commit details for {commit_sha}: {e}")
+            logger.debug(f"Failed to get commit details for {commit_sha}: {e}")
             return None
 
     def get_prioritized_assignees(self):
