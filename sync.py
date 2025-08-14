@@ -9,7 +9,7 @@ DIRECTION_G2J = 1
 DIRECTION_J2G = 2
 DIRECTION_BOTH = 3
 
-ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'false').lower() in ('true', '1', 'yes')
+ENABLE_ASSIGNEE_UPDATES = os.getenv('ENABLE_ASSIGNEE_UPDATES', 'true').lower() in ('true', '1', 'yes')
 
 UPDATE_OPEN_ISSUES_ONLY = os.getenv('UPDATE_OPEN_ISSUES_ONLY', 'true').lower() in ('true', '1', 'yes')
 
