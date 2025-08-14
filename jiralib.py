@@ -509,6 +509,7 @@ class JiraIssue:
     def update_assignee_if_needed(self, alert):
         """Update assignee only if current assignee is not a maintainer"""
         if not alert:
+            logger.warning(f"No alert provided for updating assignee of issue {self.key()}")
             return False
         
         # Check if UPDATE_OPEN_ISSUES_ONLY is enabled and skip closed/done issues
@@ -516,13 +517,17 @@ class JiraIssue:
         if sync.UPDATE_OPEN_ISSUES_ONLY:
             current_status = self.rawissue.fields.status.name.strip().lower()
             if current_status in ['done', 'concluído', self.endstate.lower()]:
-                logger.debug(f"Skipping closed issue {self.key()} (status: {current_status}) - UPDATE_OPEN_ISSUES_ONLY is enabled")
-                return True  # Return True to indicate no error, but no update needed
+                logger.info(f"Skipping closed issue {self.key()} (status: {current_status}) - UPDATE_OPEN_ISSUES_ONLY is enabled")
+                return True 
+            else:
+                logger.debug(f"Issue {self.key()} is open (status: {current_status}) - proceeding with assignee check")
             
         # Get current assignee
         current_assignee = None
         if hasattr(self.rawissue.fields, 'assignee') and self.rawissue.fields.assignee:
             current_assignee = self.rawissue.fields.assignee.displayName
+            
+        logger.info(f"Checking assignee for issue {self.key()}: current assignee = '{current_assignee or 'None'}'")
             
         # If no current assignee, definitely update
         if not current_assignee:
@@ -533,11 +538,13 @@ class JiraIssue:
         prioritized_assignees = alert.get_prioritized_assignees()
         maintainers = prioritized_assignees.get('maintainers', [])
         
+        logger.debug(f"Available maintainers for issue {self.key()}: {maintainers}")
+        
         if current_assignee in maintainers:
-            logger.info(f"Issue {self.key()} already assigned , no update needed.")
+            logger.info(f"Issue {self.key()} already assigned to maintainer '{current_assignee}', no update needed.")
             return True
         else:
-            logger.info(f"Issue {self.key()} assigned to non-maintainer {current_assignee}, updating to prioritize maintainers...")
+            logger.info(f"Issue {self.key()} assigned to non-maintainer '{current_assignee}', updating to prioritize maintainers...")
             return self.update_assignee_with_priority(alert)
 
     def remove_assignee(self):
