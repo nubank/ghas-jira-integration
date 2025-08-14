@@ -158,15 +158,54 @@ def github_webhook():
     # behaviour and response codes explicitly
     with sync_lock:
         if transition == "appeared_in_branch":
+            app.logger.warning(
+                "WEBHOOK_ALERT_REAPPEARANCE: Received 'appeared_in_branch' event for alert {alert_num} in {repo_id}. "
+                "Branch: {branch_ref}. Processing reappearance scenario. "
+                "Alert_Number={alert_num} Repository={repo_id} Branch={branch_ref} Event=appeared_in_branch".format(
+                    alert_num=alert_num,
+                    repo_id=repo_id,
+                    branch_ref=branch_ref
+                )
+            )
             # Handle alert reappearing after being fixed - pass branch info
             sync.alert_reappeared(repo_id, alert_num, branch_ref)
         elif transition == "created":
+            app.logger.info(
+                "WEBHOOK_ALERT_CREATED: Processing new alert {alert_num} in {repo_id}. "
+                "Alert_Number={alert_num} Repository={repo_id} Event=created".format(
+                    alert_num=alert_num,
+                    repo_id=repo_id
+                )
+            )
             sync.alert_created(repo_id, alert_num)
         elif transition in ["closed_by_user", "reopened_by_user", "reopened"]:
+            app.logger.info(
+                "WEBHOOK_ALERT_CHANGED: Processing alert state change {alert_num} in {repo_id}. "
+                "Action: {transition}. Alert_Number={alert_num} Repository={repo_id} Event={transition}".format(
+                    alert_num=alert_num,
+                    repo_id=repo_id,
+                    transition=transition
+                )
+            )
             sync.alert_changed(repo_id, alert_num)
         elif transition == "fixed":
+            app.logger.info(
+                "WEBHOOK_ALERT_FIXED: Processing fixed alert {alert_num} in {repo_id}. "
+                "Alert_Number={alert_num} Repository={repo_id} Event=fixed".format(
+                    alert_num=alert_num,
+                    repo_id=repo_id
+                )
+            )
             sync.alert_fixed(repo_id, alert_num)
         else:
+            app.logger.warning(
+                "WEBHOOK_UNKNOWN_EVENT: Received unknown transition type '{transition}' for alert {alert_num} in {repo_id}. "
+                "Alert_Number={alert_num} Repository={repo_id} Event={transition}".format(
+                    transition=transition,
+                    alert_num=alert_num,
+                    repo_id=repo_id
+                )
+            )
             # when the transition is not recognised, we return a bad request response
             return (
                 jsonify(

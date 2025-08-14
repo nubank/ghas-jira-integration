@@ -80,25 +80,42 @@ class Sync:
             if recent_event == "reappeared_in_branch":
                 branch_name = self._extract_branch_name(branch_ref) if branch_ref else "unknown"
                 
+                # Collect issue states for monitoring
+                done_issues = []
+                open_issues = []
+                
                 for i in issues:
                     current_status = i.rawissue.fields.status.name.strip().lower()
                     if current_status in ['done', 'concluído', self.jira.endstate.lower()]:
-                        logger.info(
-                            "Alert {alert_num} in {repo_id} reappeared in branch {branch}. Creating new ticket while preserving completed ones.".format(
-                                alert_num=alert.number(),
-                                repo_id=alert.github_repo.repo_id,
-                                branch=branch_name.upper()
-                            )
-                        )
+                        done_issues.append(i.key())
                         create_new_ticket = True
-                        break
-                        
-                if not create_new_ticket:
-                    logger.info(
-                        "Alert {alert_num} in {repo_id} reappeared in branch {branch} but has open tickets. Using existing ticket.".format(
+                    else:
+                        open_issues.append(i.key())
+                
+                if create_new_ticket:
+                    logger.warning(
+                        "ALERT_REAPPEARANCE_DETECTED: Alert {alert_num} in {repo_id} reappeared in branch {branch}. "
+                        "Creating NEW ticket while preserving {done_count} completed issue(s): [{done_issues}]. "
+                        "Alert_Type={alert_type} Branch={branch} Repository={repo_id} Alert_Number={alert_num}".format(
                             alert_num=alert.number(),
                             repo_id=alert.github_repo.repo_id,
-                            branch=branch_name.upper()
+                            branch=branch_name.upper(),
+                            done_count=len(done_issues),
+                            done_issues=', '.join(done_issues),
+                            alert_type=alert.get_type()
+                        )
+                    )
+                else:
+                    logger.info(
+                        "ALERT_REAPPEARANCE_OPEN_TICKETS: Alert {alert_num} in {repo_id} reappeared in branch {branch} "
+                        "but has {open_count} open ticket(s): [{open_issues}]. Using existing ticket. "
+                        "Alert_Type={alert_type} Branch={branch} Repository={repo_id} Alert_Number={alert_num}".format(
+                            alert_num=alert.number(),
+                            repo_id=alert.github_repo.repo_id,
+                            branch=branch_name.upper(),
+                            open_count=len(open_issues),
+                            open_issues=', '.join(open_issues),
+                            alert_type=alert.get_type()
                         )
                     )
 
@@ -146,6 +163,33 @@ class Sync:
         # make sure that each alert has at max
         # one issue associated with it
         if len(issues) > 1:
+            issue_details = []
+            open_count = 0
+            closed_count = 0
+            
+            for i in issues:
+                status = i.rawissue.fields.status.name
+                is_open = i.get_state()
+                issue_details.append(f"{i.key()}({status})")
+                if is_open:
+                    open_count += 1
+                else:
+                    closed_count += 1
+            
+            logger.warning(
+                "MULTIPLE_ISSUES_DETECTED: Found {total_count} issues for alert {alert_num} in {repo_id}. "
+                "Open: {open_count}, Closed: {closed_count}. Issues: [{issue_list}]. "
+                "Starting cleanup process. Alert_Type={alert_type} Repository={repo_id} Alert_Number={alert_num}".format(
+                    total_count=len(issues),
+                    alert_num=alert.number(),
+                    repo_id=alert.github_repo.repo_id,
+                    open_count=open_count,
+                    closed_count=closed_count,
+                    issue_list=', '.join(issue_details),
+                    alert_type=alert.get_type()
+                )
+            )
+            
             # Sort issues, keeping the newest active ones first (sorted by ID in descending order)
             issues.sort(key=lambda i: -int(i.id()))
             
@@ -155,14 +199,33 @@ class Sync:
             # If there are open issues, keep the newest one
             if open_issues:
                 keep_issue = open_issues[0]
+                selection_reason = "newest_open"
             else:
                 # Otherwise keep the newest issue (even if closed)
                 keep_issue = issues[0]
+                selection_reason = "newest_overall"
                 
-            # Delete all other issues except the one we're keeping
+            # Collect issues to be deleted for logging
+            issues_to_delete = []
             for i in issues:
                 if i.id() != keep_issue.id():
+                    issues_to_delete.append(f"{i.key()}({i.rawissue.fields.status.name})")
                     i.delete()
+            
+            logger.warning(
+                "MULTIPLE_ISSUES_CLEANUP: Kept issue {kept_issue}({kept_status}) using '{selection_reason}' strategy. "
+                "Deleted {deleted_count} duplicate issue(s): [{deleted_issues}]. "
+                "Alert_Type={alert_type} Repository={repo_id} Alert_Number={alert_num}".format(
+                    kept_issue=keep_issue.key(),
+                    kept_status=keep_issue.rawissue.fields.status.name,
+                    selection_reason=selection_reason,
+                    deleted_count=len(issues_to_delete),
+                    deleted_issues=', '.join(issues_to_delete),
+                    alert_type=alert.get_type(),
+                    repo_id=alert.github_repo.repo_id,
+                    alert_num=alert.number()
+                )
+            )
                     
             issues = [keep_issue]
 
